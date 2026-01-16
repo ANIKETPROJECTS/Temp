@@ -53,20 +53,6 @@ export default function QueueStatus() {
   return (
     <CustomerLayout>
       <div className="text-center space-y-6">
-        <div className="flex justify-center mb-4">
-          <div className="bg-yellow-400 p-4 border-2 border-stone-800 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-            <div className="border-2 border-stone-800 p-2 text-stone-800 font-black flex flex-col items-center">
-              <span className="text-xl tracking-tighter">Prithvi</span>
-              <div className="w-12 h-12 border-2 border-stone-800 rounded-full flex items-center justify-center my-1">
-                 <div className="w-8 h-8 border-t-4 border-stone-800 rounded-full rotate-45" />
-              </div>
-              <span className="text-xl tracking-tighter">CAFÉ</span>
-            </div>
-          </div>
-        </div>
-        
-        <p className="font-bold text-stone-800 text-sm">Prithvi Cafe - Juhu</p>
-
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -76,50 +62,50 @@ export default function QueueStatus() {
           <CheckCircle2 className="w-10 h-10" />
         </motion.div>
 
-        <h2 className="text-3xl font-black text-stone-800">Queued!</h2>
+        <h2 className="text-4xl font-black text-stone-800 tracking-tight">Queued!</h2>
         
-        <p className="text-stone-800 text-[10px] font-medium opacity-80">
+        <p className="text-stone-800 text-[10px] font-bold opacity-70 uppercase tracking-widest">
           Restaurant Timings: 10:30 am to 10:30 pm (Monday to Sunday)
         </p>
 
         <div className="py-2">
           <span className="text-stone-800 font-bold text-sm block mb-1">Your queue number is</span>
-          <h1 className="text-6xl font-black text-stone-800">
+          <h1 className="text-7xl font-black text-stone-800 tracking-tighter">
             # {queue.queueNumber}
           </h1>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-stone-100 flex flex-col items-center justify-center min-h-[120px]">
-            <span className="text-stone-800 font-bold text-sm mb-2">Booking for</span>
-            <span className="text-orange-500 text-3xl font-black">{queue.numberOfPeople}</span>
+            <span className="text-stone-800 font-bold text-sm mb-2 opacity-60">Booking for</span>
+            <span className="text-orange-500 text-4xl font-black">{queue.numberOfPeople}</span>
           </div>
 
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-stone-100 flex flex-col items-center justify-center min-h-[120px]">
-            <span className="text-stone-800 font-bold text-sm mb-2">Date & Time</span>
+            <span className="text-stone-800 font-bold text-sm mb-2 opacity-60">Date & Time</span>
             <span className="text-orange-500 text-lg font-black leading-tight">
               {format(new Date(queue.createdAt!), 'dd MMM, hh:mm a')}
             </span>
           </div>
         </div>
 
-        <div className="pt-2 pb-4">
+        <div className="pt-2">
           <p className="text-stone-400 font-bold text-sm mb-4">Name: {queue.name}</p>
           <Button 
             variant="outline" 
-            className="bg-white text-stone-800 border-stone-200 font-bold px-8 h-12 rounded-xl shadow-sm hover:bg-stone-50"
+            className="bg-white text-stone-800 border-stone-200 font-black px-8 h-12 rounded-xl shadow-sm hover:bg-stone-50 uppercase tracking-wide"
             onClick={() => {/* Add leave queue logic if needed */}}
           >
             Leave Queue
           </Button>
         </div>
 
-        <div className="fixed bottom-0 left-0 right-0 flex border-t border-stone-200 bg-white">
-          <button className="flex-1 h-16 flex items-center justify-center gap-2 font-bold text-stone-800 border-r border-stone-200 hover:bg-stone-50 transition-colors">
-            <span className="text-xl">Share with Friends</span>
+        <div className="fixed bottom-0 left-0 right-0 flex border-t border-stone-200 bg-white shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
+          <button className="flex-1 h-16 flex items-center justify-center gap-2 font-black text-stone-800 border-r border-stone-200 hover:bg-stone-50 transition-colors uppercase tracking-tight text-lg">
+            Share with Friends
           </button>
-          <button className="flex-1 h-16 flex items-center justify-center gap-2 font-bold text-white bg-[#FF9933] hover:bg-[#e68a2e] transition-colors">
-            <span className="text-xl">Get Direction</span>
+          <button className="flex-1 h-16 flex items-center justify-center gap-2 font-black text-white bg-[#FF9933] hover:bg-[#e68a2e] transition-colors uppercase tracking-tight text-lg">
+            Get Direction
           </button>
         </div>
       </div>
