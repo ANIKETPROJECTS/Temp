@@ -1,0 +1,885 @@
+Full-Stack Queue Management System for Cafe 2020
+Build a complete queue management system with QR code entry, real-time notifications, SMS integration, and time-based acceptance logic for efficient table allocation.
+
+Technical Stack
+Frontend
+
+Framework: React with Vite
+Styling: Tailwind CSS (core utility classes only)
+UI Components: Shadcn UI
+State Management: TanStack Query (React Query) for data fetching and real-time polling
+Animations: Framer Motion for smooth transitions
+Icons: Lucide React
+
+Backend
+
+Runtime: Node.js
+Framework: Express.js
+Database: MongoDB with Mongoose ODM
+Authentication: JWT (JSON Web Tokens)
+SMS Service: Twilio integration
+Task Scheduling: node-cron for expiry checks
+
+Required Dependencies
+Backend (package.json):
+json{
+  "dependencies": {
+    "express": "^4.18.2",
+    "mongoose": "^7.6.3",
+    "twilio": "^4.19.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "node-cron": "^3.0.2",
+    "express-validator": "^7.0.1"
+  }
+}
+```
+
+**Environment Variables (.env):**
+```
+PORT=5000
+MONGODB_URI=mongodb://localhost:27017/cafe2020
+JWT_SECRET=your_jwt_secret_key_here
+TWILIO_ACCOUNT_SID=your_twilio_account_sid
+TWILIO_AUTH_TOKEN=your_twilio_auth_token
+TWILIO_PHONE_NUMBER=+1234567890
+FRONTEND_URL=http://localhost:5173
+
+Database Schema (MongoDB with Mongoose)
+Queue Entry Schema
+javascriptconst queueSchema = new mongoose.Schema({
+  // Customer information
+  name: {
+    type: String,
+    trim: true,
+    default: 'Guest'
+  },
+  phoneNumber: {
+    type: String,
+    required: true,
+    match: /^[0-9]{10}$/,
+    index: true
+  },
+  numberOfPeople: {
+    type: Number,
+    required: true,
+    min: 1,
+    max: 10
+  },
+  
+  // Queue management
+  queueNumber: {
+    type: Number,
+    required: true,
+    unique: true
+  },
+  status: {
+    type: String,
+    enum: ['waiting', 'called', 'confirmed', 'expired', 'cancelled', 'completed'],
+    default: 'waiting',
+    index: true
+  },
+  
+  // Notification tracking
+  notificationSent: {
+    type: Boolean,
+    default: false
+  },
+  notificationSentAt: Date,
+  notificationStatus: {
+    type: String,
+    enum: ['pending', 'sent', 'failed'],
+    default: 'pending'
+  },
+  notificationAttempts: {
+    type: Number,
+    default: 0
+  },
+  
+  // Timer and response tracking
+  calledAt: Date,
+  responseDeadline: Date,
+  respondedAt: Date,
+  responseType: {
+    type: String,
+    enum: ['accepted', 'cancelled', 'expired', null],
+    default: null
+  },
+  timerActive: {
+    type: Boolean,
+    default: false
+  },
+  expiryTimeoutId: String,
+  
+  // Status timestamps
+  createdAt: {
+    type: Date,
+    default: Date.now,
+    index: true
+  },
+  completedAt: Date,
+  cancelledAt: Date,
+  expiredAt: Date,
+  cancelledBy: {
+    type: String,
+    enum: ['admin', 'customer', 'system']
+  }
+}, {
+  timestamps: true
+});
+
+// Auto-increment queue number
+queueSchema.pre('save', async function(next) {
+  if (this.isNew) {
+    const lastQueue = await this.constructor.findOne()
+      .sort({ queueNumber: -1 });
+    this.queueNumber = lastQueue ? lastQueue.queueNumber + 1 : 1;
+  }
+  next();
+});
+Notification Log Schema
+javascriptconst notificationSchema = new mongoose.Schema({
+  bookingId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Queue',
+    required: true
+  },
+  phoneNumber: String,
+  message: String,
+  type: {
+    type: String,
+    enum: ['sms', 'call'],
+    default: 'sms'
+  },
+  status: {
+    type: String,
+    enum: ['sent', 'failed', 'pending'],
+    required: true
+  },
+  twilioSid: String,
+  error: String,
+  sentAt: Date,
+  attemptedAt: Date
+}, {
+  timestamps: true
+});
+Admin User Schema
+javascriptconst adminSchema = new mongoose.Schema({
+  username: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  password: {
+    type: String,
+    required: true
+  },
+  role: {
+    type: String,
+    default: 'admin'
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
+});
+
+Customer User Flow
+1. QR Code Scan Entry
+
+Customer scans QR code and lands on the booking page
+Clean, branded interface with Cafe 2020 logo at top
+Mobile-first responsive design
+
+2. Booking Form (Initial Page)
+Form Fields:
+
+Name (Optional) - Text input
+
+Placeholder: "Enter your name"
+Not required but displayed in queue information
+
+
+Phone Number (Required) - Number input with strict validation
+
+Only accepts numeric characters (0-9)
+No letters or special characters allowed
+Format: Exactly 10-digit mobile number
+CRITICAL: This number will receive SMS/call notification when it's their turn
+Visual indicator: Phone icon on left side of input
+Real-time validation feedback
+
+
+Party Size (Required) - Number input
+
+Minimum: 1 person
+Maximum: 10 people
+NO default value - customer must actively enter party size
+Only accepts numeric input
+Visual indicator: Users icon on left side of input
+
+
+
+Primary CTA Button: "Proceed"
+
+Large, prominent, centered
+Orange background (#FF9933)
+Only enabled when form is valid
+Disabled state: Gray with "cursor-not-allowed"
+
+Validation Rules:
+
+Phone number must be exactly 10 digits
+Party size must be between 1-10
+Show inline error messages in red below invalid fields
+Disable "Proceed" button until all required fields are valid
+Error messages:
+
+Phone: "Please enter a valid 10-digit phone number"
+Party Size: "Party size must be between 1 and 10"
+
+
+
+Input Handlers:
+javascript// Phone number - block non-numeric
+handlePhoneInput = (e) => {
+  e.target.value = e.target.value.replace(/[^0-9]/g, '');
+  if (e.target.value.length <= 10) {
+    // Update state
+  }
+}
+
+// Party size - block non-numeric
+handlePartySizeInput = (e) => {
+  const value = e.target.value.replace(/[^0-9]/g, '');
+  const numValue = value ? parseInt(value) : '';
+  if (numValue >= 1 && numValue <= 10) {
+    // Update state
+  }
+}
+```
+
+### **3. Queue Confirmation Page (After Successful Booking)**
+
+**Layout Structure:**
+```
+┌─────────────────────────────┐
+│   [Cafe 2020 Logo - Yellow] │
+│        "Cafe 2020"          │
+├─────────────────────────────┤
+│   ✓ (Large Green Checkmark) │
+│        "Queued!"            │
+│                             │
+│  Restaurant Timings:        │
+│  10:30 am to 10:30 pm       │
+│  (Monday to Sunday)         │
+│                             │
+│  Your queue number is       │
+│        # 4                  │
+│  (Extra large, bold)        │
+│                             │
+│  ┌──────────┐ ┌───────────┐│
+│  │Booking   │ │Date & Time││
+│  │for       │ │16 Jan,    ││
+│  │    2     │ │05:21 PM   ││
+│  └──────────┘ └───────────┘│
+│                             │
+│     Name: Sukhi             │
+│                             │
+│    [Leave Queue Button]     │
+│                             │
+├─────────────────────────────┤
+│ Share with  │ Get Direction │
+│  Friends    │   (Orange)    │
+└─────────────────────────────┘
+```
+
+**Visual Elements:**
+- Background: Warm beige/cream (#F5E6D3)
+- Cafe 2020 logo at top with yellow background box
+- Large green checkmark icon (64px)
+- "Queued!" heading (bold, 32px)
+- Restaurant timings in gray text
+- Queue number display: Extra bold, 48-64px, dark text (e.g., "# 4")
+
+**Info Cards (Side by Side):**
+- White background, rounded corners
+- Left card: "Booking for" → Shows party size number (orange text)
+- Right card: "Date & Time" → Shows timestamp (orange text, format: "16 Jan, 05:21 PM")
+- Below cards: "Name: [Customer Name]" (gray text)
+
+**Action Buttons:**
+- "Leave Queue" - Centered, white background, gray border, rounded
+- Bottom split bar:
+  - Left half: "Share with Friends" (white background, share icon)
+  - Right half: "Get Direction" (orange background #FF9933, navigation icon)
+
+**Real-time Updates:**
+- Poll queue status every 5 seconds using React Query
+- Update queue position automatically
+- Show loading indicator during transitions
+
+### **4. Acceptance Page (When Customer is Called)**
+
+**This page replaces the confirmation page when admin clicks "Call Now"**
+
+**Layout Structure:**
+```
+┌─────────────────────────────┐
+│   [Cafe 2020 Logo]          │
+├─────────────────────────────┤
+│   🎉 (Large celebration)    │
+│  Your Seat is Ready!        │
+│                             │
+│   Time remaining:           │
+│       09:45                 │
+│   (Large countdown timer)   │
+│                             │
+│  Please respond within      │
+│  10 minutes                 │
+│                             │
+│   Queue #4 | Party of 2     │
+│                             │
+│  ┌────────────────────────┐ │
+│  │   I'm Coming           │ │
+│  │   (Green, Large)       │ │
+│  └────────────────────────┘ │
+│                             │
+│  ┌────────────────────────┐ │
+│  │   Cancel Booking       │ │
+│  │   (Red, Secondary)     │ │
+│  └────────────────────────┘ │
+│                             │
+│  ⚠️ Your booking will be    │
+│  automatically cancelled if │
+│  you don't respond          │
+└─────────────────────────────┘
+Features:
+
+10-minute countdown timer (MM:SS format)
+Timer color changes:
+
+Green: 10:00 - 3:00 remaining
+Orange: 2:59 - 1:00 remaining
+Red: 0:59 - 0:00 (final minute)
+
+
+Real-time countdown updated every second
+Two large action buttons (minimum 48px height)
+Warning message at bottom
+
+Timer Logic:
+javascriptconst calculateTimeLeft = () => {
+  const now = new Date();
+  const difference = new Date(responseDeadline) - now;
+  
+  if (difference <= 0) {
+    return 'EXPIRED';
+  }
+  
+  const minutes = Math.floor(difference / 60000);
+  const seconds = Math.floor((difference % 60000) / 1000);
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+};
+User Actions:
+A. Customer Clicks "I'm Coming":
+
+Timer stops immediately
+Status updates to "confirmed"
+Show confirmation message:
+
+"Great! Please proceed to the counter"
+"Queue #[Number]"
+"Your table is waiting"
+
+
+Send SMS confirmation
+Admin dashboard shows "Confirmed - En route" status with green badge
+
+B. Customer Clicks "Cancel Booking":
+
+Show confirmation dialog
+If confirmed, navigate to cancellation page
+Send cancellation SMS
+System automatically calls next person in queue
+
+C. Timer Expires (No Response):
+
+Automatic status change to "expired"
+Navigate to expiry page
+Send expiry SMS
+System automatically calls next person in queue
+Admin sees "Expired - Auto-cancelled" with gray badge
+
+5. Cancellation/Expiry Page
+Two Variations:
+A. Manual Cancellation (User clicked "Cancel Booking"):
+
+Icon: Orange user icon with line through it
+Heading: "Sorry we have to cancel your booking."
+Message: Standard apology message
+Booking details shown in gray/muted colors
+
+B. Auto-Expiry (Timer ran out):
+
+Icon: Red clock/timer icon
+Heading: "Your booking has expired"
+Message: "We didn't receive your confirmation within 10 minutes. Your spot has been allocated to the next person in queue."
+Booking details shown in gray/muted colors
+
+Common Elements:
+
+Cafe 2020 logo at top
+Booking details (grayed out): party size, date/time, name
+Social media section with Instagram icon
+Copyright footer: "© 2026 Cafe 2020. All Rights Reserved."
+"Powered by ReserveGo" branding
+Bottom action bar (Share with Friends | Get Direction)
+
+
+SMS/Call Notification System (Twilio Integration)
+Notification Triggers
+
+When Customer Joins Queue (Optional):
+
+SMS: "Hi [Name]! You've been added to the queue at Cafe 2020. Queue #[Number]. We'll notify you when your table is ready."
+
+
+When Admin Calls Customer (Required):
+
+SMS (Primary): "Hi [Name]! Your table is ready at Cafe 2020. Queue #[Number]. Please confirm within 10 minutes: [Link to acceptance page]"
+Call (Optional): Pre-recorded message with same information
+Both sent simultaneously for maximum reach
+
+
+When Customer Accepts:
+
+SMS: "Thank you [Name]! Your table #[Number] is confirmed at Cafe 2020. Please proceed to the counter."
+
+
+When Customer Cancels Manually:
+
+SMS: "Your booking at Cafe 2020 has been cancelled as requested. We hope to see you again soon!"
+
+
+When Booking Expires (Auto-cancelled):
+
+SMS: "Your booking at Cafe 2020 has expired due to no response within 10 minutes. Please book again if you're still interested."
+
+
+
+Twilio Setup
+javascriptconst twilio = require('twilio');
+const accountSid = process.env.TWILIO_ACCOUNT_SID;
+const authToken = process.env.TWILIO_AUTH_TOKEN;
+const client = twilio(accountSid, authToken);
+
+const TWILIO_PHONE = process.env.TWILIO_PHONE_NUMBER;
+
+async function sendSMS(phoneNumber, message, bookingId) {
+  try {
+    const formattedPhone = `+91${phoneNumber}`;
+    
+    const result = await client.messages.create({
+      body: message,
+      from: TWILIO_PHONE,
+      to: formattedPhone
+    });
+    
+    await Notification.create({
+      bookingId,
+      phoneNumber,
+      message,
+      status: 'sent',
+      twilioSid: result.sid,
+      sentAt: new Date()
+    });
+    
+    await Queue.findByIdAndUpdate(bookingId, {
+      notificationSent: true,
+      notificationSentAt: new Date(),
+      notificationStatus: 'sent',
+      $inc: { notificationAttempts: 1 }
+    });
+    
+    return { success: true, messageId: result.sid };
+    
+  } catch (error) {
+    console.error('SMS failed:', error);
+    
+    await Notification.create({
+      bookingId,
+      phoneNumber,
+      message,
+      status: 'failed',
+      error: error.message,
+      attemptedAt: new Date()
+    });
+    
+    return { success: false, error: error.message };
+  }
+}
+
+// Retry logic with exponential backoff
+async function sendWithRetry(phoneNumber, message, bookingId, maxAttempts = 3) {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    const result = await sendSMS(phoneNumber, message, bookingId);
+    
+    if (result.success) {
+      return result;
+    }
+    
+    if (attempt < maxAttempts) {
+      await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+    }
+  }
+  
+  return { success: false, error: 'Max retry attempts reached' };
+}
+
+Time-Based Acceptance System (10-Minute Response Window)
+When Admin Clicks "Call Now"
+javascript// 1. Database Updates
+const responseDeadline = new Date(Date.now() + 10 * 60 * 1000); // +10 minutes
+
+await Queue.findByIdAndUpdate(queueId, {
+  status: 'called',
+  calledAt: new Date(),
+  responseDeadline: responseDeadline,
+  timerActive: true
+});
+
+// 2. Send Notifications
+const acceptanceLink = `https://cafe2020.com/queue/${bookingId}`;
+const smsMessage = `Hi ${name}! Your table is ready at Cafe 2020. Queue #${queueNumber}. Please confirm within 10 minutes: ${acceptanceLink}`;
+await sendWithRetry(phoneNumber, smsMessage, bookingId);
+
+// 3. Schedule Auto-Expiry Check
+const expiryTimeout = setTimeout(async () => {
+  await checkAndExpireBooking(bookingId);
+}, 10 * 60 * 1000);
+Auto-Expiry Function
+javascriptasync function checkAndExpireBooking(bookingId) {
+  const booking = await Queue.findById(bookingId);
+  
+  if (booking && booking.status === 'called' && booking.timerActive) {
+    await Queue.findByIdAndUpdate(bookingId, {
+      status: 'expired',
+      timerActive: false,
+      expiredAt: new Date(),
+      responseType: 'expired'
+    });
+    
+    const expirySMS = `Your booking at Cafe 2020 has expired due to no response. Please book again if interested.`;
+    await sendSMS(booking.phoneNumber, expirySMS, bookingId);
+    
+    await callNextInQueue();
+  }
+}
+Customer Acceptance Function
+javascriptasync function acceptBooking(bookingId) {
+  const booking = await Queue.findById(bookingId);
+  
+  if (booking.status !== 'called' || !booking.timerActive) {
+    throw new Error('Booking is no longer valid for acceptance');
+  }
+  
+  if (booking.expiryTimeoutId) {
+    clearTimeout(booking.expiryTimeoutId);
+  }
+  
+  await Queue.findByIdAndUpdate(bookingId, {
+    status: 'confirmed',
+    timerActive: false,
+    respondedAt: new Date(),
+    responseType: 'accepted'
+  });
+  
+  const confirmSMS = `Thank you ${booking.name}! Your table #${booking.queueNumber} is confirmed at Cafe 2020. Please proceed to the counter.`;
+  await sendSMS(booking.phoneNumber, confirmSMS, bookingId);
+  
+  return { success: true, message: 'Booking confirmed' };
+}
+Safety Cron Job (Backup Expiry Check)
+javascriptconst cron = require('node-cron');
+
+// Run every 1 minute
+cron.schedule('* * * * *', async () => {
+  const expiredBookings = await Queue.find({
+    status: 'called',
+    timerActive: true,
+    responseDeadline: { $lt: new Date() }
+  });
+  
+  for (const booking of expiredBookings) {
+    await checkAndExpireBooking(booking._id);
+  }
+});
+
+API Endpoints
+Public Routes (No Authentication)
+javascript// Join queue
+POST /api/queue/join
+Body: { name, phoneNumber, numberOfPeople }
+Response: { success, data: { id, queueNumber, status, ... } }
+
+// Get queue status
+GET /api/queue/:id
+Response: { success, data: { queueNumber, status, responseDeadline, ... } }
+
+// Accept booking
+PATCH /api/queue/:id/accept
+Response: { success, message }
+
+// Cancel booking
+PATCH /api/queue/:id/cancel
+Response: { success, message }
+
+// Leave queue
+DELETE /api/queue/:id/leave
+Response: { success, message }
+
+// Get timer status
+GET /api/queue/:id/timer
+Response: { success, data: { timerActive, responseDeadline, timeRemaining } }
+Protected Routes (Admin - Require JWT)
+javascript// Admin login
+POST /api/admin/login
+Body: { username, password }
+Response: { success, token, admin }
+
+// Get all queue entries
+GET /api/admin/queue?status=waiting&date=2026-01-16
+Response: { success, data: { waiting, called, confirmed, ... }, stats }
+
+// Call customer
+PATCH /api/admin/queue/:id/call
+Response: { success, message, data }
+
+// Cancel booking (admin)
+PATCH /api/admin/queue/:id/cancel
+Body: { reason }
+Response: { success, message }
+
+// Complete service
+PATCH /api/admin/queue/:id/complete
+Response: { success, message, data }
+
+// Extend timer (optional)
+PATCH /api/admin/queue/:id/extend
+Response: { success, message, data: { newDeadline } }
+
+// Get analytics
+GET /api/admin/analytics?period=today
+Response: { success, data: { totalBookings, acceptanceRate, ... } }
+
+// Get notification logs
+GET /api/admin/notifications/:bookingId
+Response: { success, data: [ ... notification history ... ] }
+
+Admin Dashboard (Professional UI)
+2.1 Authentication
+
+Simple login page (default: admin/admin123)
+JWT token stored in localStorage
+Persistent session handling
+Auto-redirect if not authenticated
+
+2.2 Live Queue Management
+Two-Column Layout:
+Left Column: "Waiting List"
+
+Shows all customers with status='waiting'
+Display: Queue #, Name, Party Size, Wait Time
+Actions per customer:
+
+"Call Now" button (orange) - triggers SMS and timer
+"Cancel" button (red) - removes from queue
+
+
+
+Right Column: "Currently Called"
+
+Shows customers with status='called' or 'confirmed'
+Display: Queue #, Name, Party Size, Time Called, Timer Status
+Real-time countdown for each called customer
+Color-coded status badges:
+
+Orange: "Waiting Response" (called, timer active)
+Green: "Confirmed - En route" (customer accepted)
+Red: "Expired" (timer ran out)
+
+
+Actions:
+
+"Complete" button - marks service complete
+"Extend Timer" button - adds 5 more minutes
+
+
+
+Design:
+
+Use Shadcn cards for each queue entry
+Smooth animations with Framer Motion when items move between columns
+Auto-refresh using React Query (poll every 3 seconds)
+Empty states with helpful messages
+
+2.3 Analytics Panel
+KPI Cards (Top Row):
+
+In Queue - Real-time count of waiting customers
+Active Now - Count of called/confirmed customers
+Total Unique Users - Unique phone numbers (today/week/month based on filter)
+Total Visits - Total bookings (today/week/month)
+
+Interactive Graphs (Using Recharts):
+
+Customer Volume Chart (Bar Chart)
+
+X-axis: Time periods (hours for today, days for week/month)
+Y-axis: Number of customers
+Three bars per period:
+
+Total bookings (blue)
+Accepted (green)
+Cancelled/Expired (red)
+
+
+
+
+Average Wait Time Trend (Line Chart)
+
+X-axis: Time periods
+Y-axis: Wait time in minutes
+Show trend line with data points
+Tooltip shows exact values
+
+
+
+Time Filters:
+
+Three toggle buttons: "Today" | "This Week" | "This Month"
+Updates all KPIs and graphs simultaneously
+Default: Today
+
+Data Table (Bottom Section):
+
+Columns: Date, Total Bookings, Accepted, Cancelled, Expired, Avg Wait Time, Acceptance Rate
+Sortable columns
+Pagination for large datasets
+Export to CSV option
+
+Design:
+
+Use Shadcn table components
+Responsive grid layout for KPI cards
+Clean, professional typography
+Loading skeletons during data fetch
+
+
+Design Guidelines
+Color Palette
+
+Primary: Orange (#FF9933) - CTAs, highlights
+Secondary: Soft brown (#8B4513) - text, borders
+Background: Cream (#F5E6D3) - page backgrounds
+Success: Green (#10B981) - confirmations, checkmarks
+Warning: Orange/Amber - timer warnings
+Danger: Red (#EF4444) - cancellations, errors
+Neutral: Grays for text hierarchy
+
+Typography
+
+Headings: Bold, modern sans-serif
+Body: Clean, readable font (Inter or similar)
+Numbers: Tabular figures for queue numbers and stats
+
+Responsive Design
+
+Customer Pages: Mobile-first (320px+)
+
+Single column layout
+Large touch targets (min 44px)
+Readable text (min 16px)
+
+
+Admin Dashboard: Desktop-optimized (1024px+)
+
+Two-column queue layout
+Side-by-side analytics
+Tablet support (768px+) with adjusted layout
+
+
+
+UI/UX Principles
+
+Rounded corners: rounded-2xl for cards, rounded-lg for buttons
+Subtle shadows: Use Tailwind shadow utilities
+Clear hierarchy: Size, weight, and color for importance
+Smooth animations: Framer Motion for all state changes
+Loading states: Skeletons and spinners
+Empty states: Friendly messages with icons
+Error handling: Clear, actionable error messages
+
+
+Implementation Checklist
+Backend
+
+ Set up Express server with CORS
+ Connect to MongoDB with Mongoose
+ Create all database schemas
+ Implement JWT authentication middleware
+ Build all public API endpoints
+ Build all protected admin endpoints
+ Integrate Twilio SMS service
+ Implement timer logic and auto-expiry
+ Set up cron job for backup expiry checks
+ Add input validation with express-validator
+ Implement error handling middleware
+
+Frontend
+
+ Set up Vite + React + Tailwind
+ Install Shadcn UI components
+ Configure React Query for data fetching
+ Set up Framer Motion
+ Build customer booking form with validation
+ Build queue confirmation page
+ Build acceptance page with live timer
+ Build cancellation/expiry pages
+ Build admin login page
+ Build admin dashboard layout
+ Build live queue management (two columns)
+ Build analytics panel with charts
+ Implement real-time polling (React Query)
+ Add animations for all transitions
+ Make fully responsive
+
+Testing
+
+ Test phone number validation
+ Test SMS sending and retry logic
+ Test 10-minute timer and auto-expiry
+ Test customer acceptance flow
+ Test customer cancellation flow
+ Test admin calling next in queue
+ Test real-time updates on customer page
+ Test real-time updates on admin dashboard
+ Test analytics calculations
+ Test responsive design on mobile/tablet/desktop
+
+
+Key Features Summary
+✅ QR Code Entry - Customers scan to join queue
+✅ Phone Number Collection - For SMS notifications
+✅ Real-time Status - Live updates via React Query polling
+✅ SMS Notifications - Twilio integration with retry logic
+✅ 10-Minute Timer - Auto-expiry if no response
+✅ Customer Actions - Accept or cancel booking
+✅ Admin Dashboard - Professional queue management UI
+✅ Analytics - KPIs, charts, and historical data
+✅ Responsive Design - Mobile customer, desktop admin
+✅ Smooth Animations - Framer Motion throughout
+This system ensures efficient table allocation, prevents queue blocking, and provides an excellent experience for both customers and staff.
