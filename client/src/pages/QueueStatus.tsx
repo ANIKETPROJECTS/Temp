@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useRoute, useLocation } from "wouter";
 import { useQueueStatus } from "@/hooks/use-queue";
 import { CustomerLayout } from "@/components/CustomerLayout";
+import { Button } from "@/components/ui/button";
 import { Loader2, Calendar, Users, Clock, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
