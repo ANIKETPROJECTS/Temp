@@ -3,7 +3,7 @@ import { Coffee } from "lucide-react";
 
 export function CustomerLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="h-screen bg-[#F5E6D3] relative overflow-hidden flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-[#F5E6D3] relative overflow-x-hidden flex flex-col items-center justify-center p-4">
       {/* Background Decorative Elements */}
       <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-b from-orange-100/50 to-transparent pointer-events-none" />
       
@@ -20,7 +20,7 @@ export function CustomerLayout({ children }: { children: ReactNode }) {
         </div>
 
         {/* Main Content Card */}
-        <div className="glass-card rounded-3xl p-6 md:p-8 shadow-2xl ring-1 ring-black/5 overflow-y-auto no-scrollbar flex-1 mb-24">
+        <div className="glass-card rounded-3xl p-6 md:p-8 shadow-2xl ring-1 ring-black/5 flex-1 mb-24 overflow-visible">
           {children}
         </div>
 
