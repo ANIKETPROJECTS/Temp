@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import logoUrl from "@assets/image_1768618545322.png";
+import logoUrl from "@assets/image_1768618696361.png";
 
 export function CustomerLayout({ children }: { children: ReactNode }) {
   return (
@@ -9,15 +9,14 @@ export function CustomerLayout({ children }: { children: ReactNode }) {
       
       <div className="w-full max-w-md z-10 h-full flex flex-col py-8 overflow-hidden">
         {/* Logo Header */}
-        <div className="flex flex-col items-center mb-6 flex-shrink-0">
-          <div className="mb-4 transition-transform duration-300">
+        <div className="flex flex-col items-center mb-10 flex-shrink-0">
+          <div className="w-48 transition-transform duration-300">
             <img 
               src={logoUrl} 
-              alt="Cafe 2020 Logo" 
-              className="h-24 w-auto object-contain"
+              alt="Made in 2020 Logo" 
+              className="w-full h-auto object-contain"
             />
           </div>
-          <p className="text-stone-600 font-bold tracking-widest text-xs uppercase opacity-80">Queue Management</p>
         </div>
 
         {/* Main Content Card */}
