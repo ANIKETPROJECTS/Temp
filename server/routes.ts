@@ -5,7 +5,10 @@ import { api } from "@shared/routes";
 import { z } from "zod";
 import express from 'express';
 import session from "express-session";
+import MemoryStoreFactory from "memorystore";
 import passport from "passport";
+
+const MemoryStore = MemoryStoreFactory(session);
 import { Strategy as LocalStrategy } from "passport-local";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
@@ -37,6 +40,9 @@ export async function registerRoutes(
       secret: process.env.SESSION_SECRET || "cafe2020_secret",
       resave: false,
       saveUninitialized: false,
+      store: new MemoryStore({
+        checkPeriod: 86400000 // prune expired entries every 24h
+      }),
       cookie: { secure: process.env.NODE_ENV === "production" },
     })
   );

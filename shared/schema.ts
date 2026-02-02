@@ -1,4 +1,3 @@
-import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 // NOTE: These types and schemas are maintained for frontend compatibility 
