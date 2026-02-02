@@ -39,11 +39,14 @@ export default function AdminDashboard() {
     .sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime())
     .slice(0, 10) || [];
 
-  const handleCall = (id: number) => {
+  const handleCall = (id: string, phoneNumber: string) => {
+    // Open dialer
+    window.location.href = `tel:${phoneNumber}`;
+    // Also trigger the API call to update status
     callCustomer(id);
   };
 
-  const handleStatus = (id: number, status: any) => {
+  const handleStatus = (id: string, status: any) => {
     updateStatus({ id, status });
   };
 
@@ -104,7 +107,7 @@ export default function AdminDashboard() {
                     <div className="flex items-center gap-2">
                       {entry.status === 'waiting' && (
                         <Button 
-                          onClick={() => handleCall(entry.id)}
+                          onClick={() => handleCall(entry.id, entry.phoneNumber)}
                           disabled={isCalling}
                           className="bg-blue-600 hover:bg-blue-700 text-white"
                         >
