@@ -27,6 +27,7 @@ export type QueueEntry = {
   responseDeadline?: Date;
   respondedAt?: Date;
   responseType?: 'accepted' | 'cancelled' | 'expired';
+  message?: string;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -60,6 +61,5 @@ export type InsertUser = {
 
 export type InsertQueueEntry = z.infer<typeof insertQueueSchema>;
 
-// Request Types
 export type CreateQueueRequest = InsertQueueEntry;
 export type UpdateQueueStatusRequest = { status: QueueEntry['status'] };

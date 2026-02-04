@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { insertQueueSchema, queueEntries, users } from './schema';
+import { insertQueueSchema, type QueueEntry, type User } from './schema';
 
 // ============================================
 // SHARED ERROR SCHEMAS
@@ -33,7 +33,7 @@ export const api = {
         password: z.string(),
       }),
       responses: {
-        200: z.custom<typeof users.$inferSelect>(),
+        200: z.custom<User>(),
         401: errorSchemas.unauthorized,
       },
     },
@@ -48,7 +48,7 @@ export const api = {
       method: 'GET' as const,
       path: '/api/user',
       responses: {
-        200: z.custom<typeof users.$inferSelect>(),
+        200: z.custom<User>(),
         401: errorSchemas.unauthorized,
       },
     }
@@ -59,7 +59,7 @@ export const api = {
       path: '/api/queue',
       input: insertQueueSchema,
       responses: {
-        201: z.custom<typeof queueEntries.$inferSelect>(),
+        201: z.custom<QueueEntry>(),
         400: errorSchemas.validation,
       },
     },
@@ -67,14 +67,14 @@ export const api = {
       method: 'GET' as const,
       path: '/api/queue',
       responses: {
-        200: z.array(z.custom<typeof queueEntries.$inferSelect>()),
+        200: z.array(z.custom<QueueEntry>()),
       },
     },
     get: {
       method: 'GET' as const,
       path: '/api/queue/:id',
       responses: {
-        200: z.custom<typeof queueEntries.$inferSelect>(),
+        200: z.custom<QueueEntry>(),
         404: errorSchemas.notFound,
       },
     },
@@ -82,7 +82,7 @@ export const api = {
       method: 'GET' as const,
       path: '/api/queue/:id/status',
       responses: {
-        200: z.custom<typeof queueEntries.$inferSelect>(),
+        200: z.custom<QueueEntry>(),
         404: errorSchemas.notFound,
       },
     },
@@ -93,7 +93,7 @@ export const api = {
         status: z.enum(['waiting', 'called', 'confirmed', 'expired', 'cancelled', 'completed']) 
       }),
       responses: {
-        200: z.custom<typeof queueEntries.$inferSelect>(),
+        200: z.custom<QueueEntry>(),
         404: errorSchemas.notFound,
       },
     },
@@ -101,15 +101,19 @@ export const api = {
       method: 'POST' as const,
       path: '/api/queue/:id/call',
       responses: {
-        200: z.custom<typeof queueEntries.$inferSelect>(),
+        200: z.custom<QueueEntry>(),
         404: errorSchemas.notFound,
       },
     },
     accept: { // Customer accepts
       method: 'POST' as const,
       path: '/api/queue/:id/accept',
+      input: z.object({
+        message: z.string().optional(),
+        onlyMessage: z.boolean().optional(),
+      }),
       responses: {
-        200: z.custom<typeof queueEntries.$inferSelect>(),
+        200: z.custom<QueueEntry>(),
         404: errorSchemas.notFound,
       },
     },
@@ -117,7 +121,7 @@ export const api = {
       method: 'POST' as const,
       path: '/api/queue/:id/cancel',
       responses: {
-        200: z.custom<typeof queueEntries.$inferSelect>(),
+        200: z.custom<QueueEntry>(),
         404: errorSchemas.notFound,
       },
     }
