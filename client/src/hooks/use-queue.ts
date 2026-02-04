@@ -123,7 +123,7 @@ export function useCancelBooking() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const res = await apiRequest("POST", "/api/bookings/leave-queue", { bookingId: id });
+      const res = await apiRequest("POST", "/api/bookings/cancel", { bookingId: id });
       return res.json();
     },
     onSuccess: (_, id) => {

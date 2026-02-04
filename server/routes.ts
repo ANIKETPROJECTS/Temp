@@ -250,6 +250,29 @@ export async function registerRoutes(
     res.json(updated);
   });
 
+  // CANCEL BOOKING (USER SIDE - FROM ACCEPT PAGE)
+  app.post("/api/bookings/cancel", async (req, res) => {
+    const { bookingId } = req.body;
+    const entry = await storage.getQueueEntry(bookingId);
+    if (!entry) return res.status(404).json({ message: "Not found" });
+
+    const removedPosition = entry.position;
+
+    const updated = await storage.updateQueueEntry(bookingId, {
+      status: 'cancelled',
+      position: undefined,
+      responseType: 'cancelled',
+      respondedAt: new Date()
+    });
+
+    if (removedPosition) {
+      // @ts-ignore
+      await storage.reorderQueue(removedPosition);
+    }
+
+    res.json(updated);
+  });
+
   // CANCEL BOOKING (ADMIN SIDE)
   app.post("/api/admin/bookings/cancel", async (req, res) => {
     const { bookingId } = req.body;
