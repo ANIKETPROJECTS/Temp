@@ -66,6 +66,7 @@ export default function Accept() {
 
   const handleSendMessage = () => {
     if (!message.trim()) return;
+    accept({ id: queue!.id, message, onlyMessage: true });
     setMessageSent(true);
     setTimeout(() => setMessageSent(false), 3000);
   };

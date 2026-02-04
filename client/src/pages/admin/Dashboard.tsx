@@ -170,11 +170,11 @@ export default function AdminDashboard() {
                     <TableCell>
                       <div className="max-w-[150px]">
                         <button 
-                          onClick={() => setSelectedMessage({ name: entry.name, message: "Sample message content..." })}
+                          onClick={() => setSelectedMessage({ name: entry.name, message: entry.message || "No special requests" })}
                           className="text-xs text-[#6B6B6B] truncate hover:text-[#2C1810] transition-colors flex items-center gap-1"
                         >
                           <MessageSquare className="w-3 h-3 shrink-0" />
-                          <span className="truncate">No special requests</span>
+                          <span className="truncate">{entry.message || "No special requests"}</span>
                         </button>
                       </div>
                     </TableCell>

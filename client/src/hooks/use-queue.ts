@@ -100,18 +100,19 @@ export function useCallCustomer() {
 export function useAcceptTable() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, message }: { id: string, message?: string }) => {
+    mutationFn: async ({ id, message, onlyMessage }: { id: string, message?: string, onlyMessage?: boolean }) => {
       const url = buildUrl(api.queue.accept.path, { id });
       const res = await fetch(url, { 
         method: api.queue.accept.method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message }),
+        body: JSON.stringify({ message, onlyMessage }),
       });
       if (!res.ok) throw new Error("Failed to accept");
       return api.queue.accept.responses[200].parse(await res.json());
     },
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: [api.queue.status.path, id] });
+      queryClient.invalidateQueries({ queryKey: [api.queue.list.path] });
     },
   });
 }

@@ -181,16 +181,22 @@ export async function registerRoutes(
   // CUSTOMER ACCEPT
   app.post(api.queue.accept.path, async (req, res) => {
     const id = req.params.id;
-    const { message } = req.body;
+    const { message, onlyMessage } = req.body;
     let entry = await storage.getQueueEntry(id);
     if (!entry) return res.status(404).json({ message: "Not found" });
 
-    entry = await storage.updateQueueEntry(id, {
-      status: 'confirmed',
-      respondedAt: new Date(),
-      responseType: 'accepted',
-      message: message || undefined
-    });
+    const updates: any = {
+      message: message || undefined,
+      updatedAt: new Date()
+    };
+
+    if (!onlyMessage) {
+      updates.status = 'confirmed';
+      updates.respondedAt = new Date();
+      updates.responseType = 'accepted';
+    }
+
+    entry = await storage.updateQueueEntry(id, updates);
     res.json(entry);
   });
 
