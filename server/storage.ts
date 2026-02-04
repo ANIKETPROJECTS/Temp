@@ -61,6 +61,7 @@ export class MongoStorage implements IStorage {
       responseDeadline: entry.responseDeadline,
       respondedAt: entry.respondedAt,
       responseType: entry.responseType,
+      message: entry.message,
       createdAt: entry.createdAt,
       updatedAt: entry.updatedAt,
     } as any;

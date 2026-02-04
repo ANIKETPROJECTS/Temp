@@ -1,0 +1,202 @@
+CRITICAL BUG FIX: User messages from acceptance page are NOT appearing in admin panel. This is a MongoDB database issue - messages are not being saved or retrieved properly.
+
+**DATABASE: MongoDB**
+
+**THE PROBLEM:**
+Users type messages in the acceptance page, but these messages are NOT showing in the admin panel. Need complete debugging of MongoDB operations.
+
+**STEP 1 - Check MongoDB Schema/Model:**
+
+1. Find the Booking/Queue model file (likely models/Booking.js, models/Queue.js, or similar)
+2. Verify the schema includes a 'message' field:
+```javascript
+   const bookingSchema = new mongoose.Schema({
+     customerName: String,
+     phone: String,
+     partySize: Number,
+     message: String,  // ← CHECK IF THIS EXISTS
+     status: String,
+     // ... other fields
+   });
+```
+3. If 'message' field is MISSING, ADD it to the schema:
+```javascript
+   message: {
+     type: String,
+     default: ''
+   }
+```
+
+**STEP 2 - User Acceptance Page (Frontend):**
+
+1. Find the acceptance page component
+2. Locate the message input field with "MESSAGE (OPTIONAL)"
+3. Check if message is captured in state:
+```javascript
+   const [message, setMessage] = useState('');
+```
+4. Verify "Send Message Only" button sends the message:
+```javascript
+   const handleSendMessage = async () => {
+     console.log('Sending message:', message); // ADD THIS
+     const response = await fetch('/api/bookings/update', {
+       method: 'POST',
+       body: JSON.stringify({
+         bookingId: bookingId,
+         message: message,  // ← VERIFY THIS IS INCLUDED
+         status: 'confirmed'
+       })
+     });
+   };
+```
+
+**STEP 3 - Backend API (Save Message to MongoDB):**
+
+1. Find the API route that handles booking updates (likely routes/bookings.js or api/bookings/update)
+2. Check if the endpoint saves the message to MongoDB:
+```javascript
+   // Should look like this:
+   router.post('/api/bookings/update', async (req, res) => {
+     const { bookingId, message, status } = req.body;
+     
+     console.log('Received message:', message); // ADD THIS LOG
+     
+     try {
+       const updatedBooking = await Booking.findByIdAndUpdate(
+         bookingId,
+         { 
+           message: message,  // ← VERIFY THIS IS HERE
+           status: status 
+         },
+         { new: true }
+       );
+       
+       console.log('Updated booking:', updatedBooking); // ADD THIS LOG
+       res.json(updatedBooking);
+     } catch (error) {
+       console.error('Error updating booking:', error);
+       res.status(500).json({ error: error.message });
+     }
+   });
+```
+
+3. If using updateOne or update, make sure message is included:
+```javascript
+   await Booking.updateOne(
+     { _id: bookingId },
+     { $set: { message: message, status: status } }
+   );
+```
+
+**STEP 4 - Admin Panel API (Fetch Messages from MongoDB):**
+
+1. Find the API route that fetches bookings for admin panel (likely /api/bookings or /api/admin/bookings)
+2. Verify the query includes the message field:
+```javascript
+   router.get('/api/bookings', async (req, res) => {
+     try {
+       const bookings = await Booking.find()
+         .select('customerName phone partySize message status createdAt') // ← message MUST BE HERE
+         .sort({ createdAt: -1 });
+       
+       console.log('Fetched bookings:', bookings); // ADD THIS LOG
+       res.json(bookings);
+     } catch (error) {
+       console.error('Error fetching bookings:', error);
+       res.status(500).json({ error: error.message });
+     }
+   });
+```
+
+3. If not using .select(), it should return all fields by default, but verify:
+```javascript
+   const bookings = await Booking.find().lean();
+   console.log('Sample booking:', bookings[0]); // CHECK IF message FIELD EXISTS
+```
+
+**STEP 5 - Admin Panel Frontend (Display Message):**
+
+1. Find the admin panel component that displays the bookings table
+2. Check if message is being displayed:
+```javascript
+   {bookings.map((booking) => (
+     <tr key={booking._id}>
+       <td>{booking.customerName}</td>
+       <td>{booking.phone}</td>
+       <td>{booking.partySize}</td>
+       <td>{booking.message || 'No special requests'}</td> {/* ← CHECK THIS */}
+       <td>{booking.status}</td>
+     </tr>
+   ))}
+```
+
+3. Add console.log to verify data:
+```javascript
+   useEffect(() => {
+     fetchBookings().then(data => {
+       console.log('Bookings received:', data); // ADD THIS
+       console.log('First booking message:', data[0]?.message); // ADD THIS
+       setBookings(data);
+     });
+   }, []);
+```
+
+**STEP 6 - Direct MongoDB Database Check:**
+
+1. Connect to MongoDB using MongoDB Compass or mongo shell
+2. Run this query to check existing data:
+```javascript
+   db.bookings.find().pretty()
+   // OR
+   db.queues.find().pretty()
+```
+3. Check if documents have 'message' field
+4. If some documents don't have message field, update them:
+```javascript
+   db.bookings.updateMany(
+     { message: { $exists: false } },
+     { $set: { message: '' } }
+   )
+```
+
+**STEP 7 - Test Complete Flow:**
+
+1. Create a new test booking from user side with message "test message"
+2. Check MongoDB directly if the message was saved:
+```javascript
+   db.bookings.findOne({ customerName: "test" })
+```
+3. Check if the message field exists and has value "test message"
+4. Refresh admin panel and verify message appears
+
+**MONGODB-SPECIFIC DEBUGGING:**
+
+□ Booking/Queue model schema includes 'message' field
+□ Schema has correct data type (String)
+□ API endpoint receives message from frontend
+□ findByIdAndUpdate or updateOne includes message in update object
+□ Message is being saved to MongoDB collection
+□ Find query returns message field (check .select() or .lean())
+□ Frontend receives message in API response
+□ Table displays booking.message correctly
+□ Check MongoDB Atlas/Compass to see actual data
+□ Check for any MongoDB errors in server logs
+
+**COMMON MONGODB ISSUES:**
+
+1. **Schema doesn't have message field** → Add to schema and restart server
+2. **Using .select() without message** → Add 'message' to .select()
+3. **Old documents missing field** → Run updateMany to add field
+4. **Wrong field name** → Check if it's 'message', 'customerMessage', or 'specialRequest'
+5. **Update not using $set** → Use $set operator for updates
+6. **Model not exported properly** → Check module.exports
+
+**EXPECTED RESULT:**
+
+1. User types "late coming" → Clicks "Send Message Only"
+2. Backend logs: "Received message: late coming"
+3. MongoDB document updated with message: "late coming"
+4. Admin API returns booking with message: "late coming"
+5. Admin panel displays "late coming" in Message column (NOT "No special requests")
+
+Please thoroughly debug using these MongoDB-specific steps and add extensive logging at each step to track where the data flow breaks.

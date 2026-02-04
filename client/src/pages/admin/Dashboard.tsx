@@ -144,9 +144,9 @@ export default function AdminDashboard() {
                     <TableCell className="font-bold text-lg text-[#2C1810]">#{entry.queueNumber}</TableCell>
                     <TableCell>
                       <div className="flex flex-col">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 cursor-pointer" onClick={() => setSelectedMessage({ name: entry.name, message: entry.message || "No special requests" })}>
                           <span className="font-bold text-[#2C1810]">{entry.name}</span>
-                          <button className="text-[#5C3317] hover:opacity-70">
+                          <button className="text-[#5C3317] hover:opacity-70" onClick={(e) => { e.stopPropagation(); window.location.href = `tel:${entry.phoneNumber}`; }}>
                             <Phone className="w-3 h-3" />
                           </button>
                         </div>
@@ -168,14 +168,10 @@ export default function AdminDashboard() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="max-w-[150px]">
-                        <button 
-                          onClick={() => setSelectedMessage({ name: entry.name, message: entry.message || "No special requests" })}
-                          className="text-xs text-[#6B6B6B] truncate hover:text-[#2C1810] transition-colors flex items-center gap-1"
-                        >
-                          <MessageSquare className="w-3 h-3 shrink-0" />
-                          <span className="truncate">{entry.message || "No special requests"}</span>
-                        </button>
+                      <div className="max-w-[200px]">
+                        <div className="text-sm text-[#2C1810] font-medium">
+                          {entry.message || "No special requests"}
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -239,7 +235,7 @@ export default function AdminDashboard() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="font-serif text-2xl text-[#2C1810]">
-              Message from {selectedMessage?.name}
+              You got a message from {selectedMessage?.name}
             </DialogTitle>
           </DialogHeader>
           <div className="py-6 text-[#6B6B6B] leading-relaxed">
@@ -249,7 +245,7 @@ export default function AdminDashboard() {
             <Button variant="outline" onClick={() => setSelectedMessage(null)} className="border-[#E0E0E0]">
               Mark as Read
             </Button>
-            <Button className="bg-[#5C3317] text-white hover:bg-[#452611]">
+            <Button className="bg-[#5C3317] text-white hover:bg-[#452611]" onClick={() => setSelectedMessage(null)}>
               Close
             </Button>
           </DialogFooter>

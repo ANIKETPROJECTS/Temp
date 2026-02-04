@@ -1,0 +1,63 @@
+I need to fix the message popup in the admin panel and change how messages are displayed in the table.
+
+**Current Issues (Image shows):**
+
+1. **Popup Problems:**
+   - Currently shows "Message from neesha" popup when clicking message column
+   - Popup displays "No special requests" even when user sent a message
+   - "Close" button in the popup is NOT working
+   - This popup format is not what we want
+
+2. **Table Display Issue:**
+   - In the admin panel table, the "Message" column always shows "No special requests"
+   - Actual messages sent by users are not displaying in the table
+   - Messages should be visible directly in the table, not hidden behind a popup
+
+**Required Changes:**
+
+**PART 1 - Fix Message Display in Table:**
+- The "Message" column in the admin panel table should display the ACTUAL message text sent by the user
+- If user sent "late coming" → Table should show "late coming"
+- If user sent "Running 5 mins late" → Table should show "Running 5 mins late"
+- If user sent no message → Table should show "No special requests"
+- Messages should be visible directly in the table row WITHOUT needing to click anything
+
+**PART 2 - Change Popup Behavior:**
+- When admin clicks on the Message column, instead of current popup, show:
+  - **Title:** "You got a message from [Customer Name]" (e.g., "You got a message from neesha")
+  - **Message Content:** Display the actual message text the user sent
+  - **Buttons:** 
+    - "Mark as Read" button
+    - "Close" button ← Make sure this works properly
+
+**PART 3 - Fix Close Button:**
+- The "Close" button in the popup is currently not working
+- Fix the onClick handler for the Close button
+- Clicking "Close" should dismiss/hide the popup properly
+
+**Expected Behavior:**
+
+1. **In Table View:**
+   - Customer "neesha" sent message "late coming"
+   - Admin sees in table: Message column shows "late coming" (not "No special requests")
+
+2. **When Clicking Message:**
+   - Popup appears with title: "You got a message from neesha"
+   - Popup shows message content: "late coming"
+   - "Mark as Read" button works
+   - "Close" button closes the popup properly
+
+3. **If No Message:**
+   - Table shows: "No special requests"
+   - Clicking opens popup: "You got a message from [Customer Name]"
+   - Popup content: "No special requests"
+
+**Technical Requirements:**
+- Fetch and display actual message data in the table
+- Update popup title to include customer name dynamically
+- Display actual message content in popup
+- Fix Close button event handler to properly close/dismiss the popup
+- Ensure "Mark as Read" functionality still works
+- Make sure the popup is responsive and looks good
+
+Please implement these changes to properly display user messages in both the table and popup.
