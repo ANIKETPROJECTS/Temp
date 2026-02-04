@@ -32,25 +32,25 @@ export function AdminLayout({ children }: { children: ReactNode }) {
   };
 
   const style = {
-    "--sidebar-background": "30 60% 22%", // #5C3317 (Dark Brown)
-    "--sidebar-foreground": "60 40% 98%", // #FFFFFF (White/Light Cream)
-    "--sidebar-primary": "60 40% 98%",
-    "--sidebar-primary-foreground": "30 60% 22%",
-    "--sidebar-accent": "36 31% 41%", // #8B6B47 (Medium Brown for Selected)
-    "--sidebar-accent-foreground": "0 0% 100%", // White
-    "--sidebar-border": "30 50% 32%", // #4A2810 (Slightly darker brown)
-    "--sidebar-ring": "30 60% 22%",
-    "--sidebar-width": "16rem",
+    "--sidebar-background": "22 39% 39%", // #8B5A3C (Rust/Brown)
+    "--sidebar-foreground": "0 0% 100%", // White
+    "--sidebar-primary": "0 0% 100%",
+    "--sidebar-primary-foreground": "22 39% 39%",
+    "--sidebar-accent": "0 0% 100% / 0.1", 
+    "--sidebar-accent-foreground": "0 0% 100%",
+    "--sidebar-border": "0 0% 100% / 0.2",
+    "--sidebar-ring": "22 39% 39%",
+    "--sidebar-width": "18rem",
   };
 
   const menuItems = [
     {
-      title: "Active Queue",
+      title: "Overview",
       url: "/admin/dashboard",
       icon: LayoutDashboard,
     },
     {
-      title: "Recent Activity",
+      title: "Feedback",
       url: "/admin/activity",
       icon: History,
     },
@@ -58,33 +58,30 @@ export function AdminLayout({ children }: { children: ReactNode }) {
 
   return (
     <SidebarProvider style={style as React.CSSProperties}>
-      <div className="flex h-svh w-full overflow-hidden bg-[#F5F5DC]">
-        <Sidebar className="border-none">
-          <SidebarHeader className="p-6 pb-4">
-            <div className="flex items-center gap-3">
-              <img src={logoUrl} alt="Logo" className="h-8 w-auto brightness-0 invert" />
-              <span className="font-sans text-2xl font-bold text-white tracking-tight">Admin Panel</span>
-            </div>
+      <div className="flex h-svh w-full overflow-hidden bg-[#FDF8F3]">
+        <Sidebar className="border-none bg-[#8B5A3C]">
+          <SidebarHeader className="p-8 pb-4">
+            <h2 className="font-serif text-3xl font-normal text-white italic tracking-tight">Admin Panel</h2>
           </SidebarHeader>
-          <SidebarContent className="px-3 pt-4">
+          <SidebarContent className="px-4 pt-6">
             <SidebarGroup>
               <SidebarGroupContent>
                 <SidebarMenu>
                   {menuItems.map((item) => (
-                    <SidebarMenuItem key={item.title} className="mb-2">
+                    <SidebarMenuItem key={item.title} className="mb-3">
                       <SidebarMenuButton
                         asChild
                         isActive={location === item.url}
                         className={cn(
-                          "transition-all duration-200 px-5 py-3 h-11 rounded-lg",
+                          "transition-all duration-200 px-4 py-3 h-12 rounded-md border border-transparent",
                           location === item.url 
-                            ? "bg-[#8B6B47] text-white font-semibold" 
-                            : "bg-transparent text-[#E8DCC4] hover:bg-white/10 hover:text-white"
+                            ? "bg-white/10 border-white/40 text-white font-medium shadow-sm" 
+                            : "text-white/80 hover:bg-white/5 hover:text-white"
                         )}
                       >
                         <Link href={item.url}>
-                          <item.icon className={cn("w-5 h-5", location === item.url ? "text-white" : "text-[#E8DCC4]")} />
-                          <span className="text-sm">{item.title}</span>
+                          <item.icon className="w-5 h-5 mr-3" />
+                          <span className="text-base">{item.title}</span>
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -93,22 +90,22 @@ export function AdminLayout({ children }: { children: ReactNode }) {
               </SidebarGroupContent>
             </SidebarGroup>
           </SidebarContent>
-          <SidebarFooter className="p-0 border-t border-white/15 bg-[#4A2810]">
-            <div className="p-5">
-              <div className="flex items-center gap-3 mb-5">
-                <div className="w-10 h-10 rounded-full bg-white/20 border border-white/30 flex items-center justify-center">
-                  <User className="w-6 h-6 text-white" />
+          <SidebarFooter className="p-6 mt-auto border-t border-white/10 bg-transparent">
+            <div className="flex flex-col gap-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-[#DCC4B0] flex items-center justify-center border border-white/20">
+                  <span className="text-[#8B5A3C] font-bold text-lg">A</span>
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-base font-bold text-white leading-none capitalize">{user?.username || "admin"}</span>
-                  <span className="text-sm text-[#C4B5A0] mt-1">Admin</span>
+                  <span className="text-lg font-medium text-white leading-none capitalize">{user?.username || "admin"}</span>
+                  <span className="text-sm text-white/60 mt-1">Admin</span>
                 </div>
               </div>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleLogout}
-                className="w-full justify-start text-white border border-white/30 hover:bg-[#8B6B47] hover:text-white font-bold h-11 px-4 rounded-md"
+                className="w-fit justify-start text-white border border-white/40 hover:bg-white/10 hover:text-white font-medium h-10 px-6 rounded-md"
               >
                 <LogOut className="w-4 h-4 mr-2" />
                 Sign Out
@@ -116,7 +113,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
             </div>
           </SidebarFooter>
         </Sidebar>
-        <main className="flex-1 overflow-auto p-8 lg:p-12">
+        <main className="flex-1 overflow-auto p-8 lg:p-16">
           <div className="max-w-7xl mx-auto">
             {children}
           </div>

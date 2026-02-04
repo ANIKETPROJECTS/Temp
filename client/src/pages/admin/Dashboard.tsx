@@ -84,10 +84,10 @@ export default function AdminDashboard() {
         {/* Page Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
-            <h1 className="text-4xl font-serif text-[#2C1810]">Active Queue Overview</h1>
-            <p className="text-[#6B6B6B] mt-2">Welcome back, here's what's happening today</p>
+            <h1 className="text-5xl font-serif text-[#4A2810] italic">Dashboard Overview</h1>
+            <p className="text-[#6B6B6B] mt-2 text-lg">Welcome back, here's what's happening today</p>
           </div>
-          <Badge className="bg-[#FFA500] hover:bg-[#FFA500] text-white px-4 py-1.5 rounded-full text-sm font-bold self-start md:self-auto">
+          <Badge className="bg-[#FFA500] hover:bg-[#FFA500] text-white px-6 py-2 rounded-full text-sm font-bold self-start md:self-auto shadow-sm">
             {waitingList.length} Waiting
           </Badge>
         </div>
