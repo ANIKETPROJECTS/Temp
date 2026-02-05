@@ -1,0 +1,61 @@
+We have an admin panel with two sections: Active Queue and Recent Activity.
+The existing booking and queue functionality is already implemented and should not be broken or changed.
+
+Current Problem
+
+Currently, when a user fills in the booking details, the data appears correctly in the Active Queue section.
+The admin then calls the user, and when the user accepts the seat, the data disappears from the admin panel.
+
+After seat acceptance, the entry is not visible in Active Queue and also not visible in Recent Activity.
+This means the system is either deleting the record or not storing it properly after confirmation.
+
+Expected Behavior
+1. Active Queue Behavior
+
+When a user books a seat, their details should appear in Active Queue.
+
+When the user clicks “I’m Coming”, the entry should also appear in Active Queue (without affecting existing booking flow).
+
+When the user accepts the seat, the entry should still remain in Active Queue until the admin confirms it.
+
+2. Confirm Flow
+
+When the admin clicks the Confirm button from Active Queue:
+
+The entry should be removed from Active Queue.
+
+The same entry should be moved and stored in Recent Activity with status = CONFIRMED.
+
+3. Cancel Flow
+
+If a seat is cancelled (by user or admin):
+
+The entry should be stored in Recent Activity with status = CANCELLED.
+
+4. Recent Activity Behavior
+
+Recent Activity must show all historical queue records, including:
+
+Confirmed bookings
+
+Cancelled bookings
+
+No confirmed or cancelled data should be deleted from the database.
+
+Important Requirements
+
+Do not break existing booking and queue logic.
+
+Only extend and fix the flow so data is not lost.
+
+Use a status-based system (example: PENDING, CONFIRMED, CANCELLED) instead of deleting records.
+
+Ensure the admin panel correctly reflects:
+
+Active Queue → only PENDING records
+
+Recent Activity → CONFIRMED and CANCELLED records
+
+Goal
+
+Fix the issue where confirmed seats disappear and ensure all queue actions are permanently stored and visible in Recent Activity, while keeping existing functionality intact.

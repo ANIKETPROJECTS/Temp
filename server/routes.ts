@@ -219,11 +219,13 @@ export async function registerRoutes(
     const oldStatus = entry.status;
     const removedPosition = entry.position;
 
+    // When status changes to COMPLETED or CANCELLED from an active status, handle reordering
+    const isActive = (s: string) => ['waiting', 'called', 'confirmed'].includes(s);
+    const isTerminal = (s: string) => ['completed', 'cancelled', 'expired', 'left'].includes(s);
+
     entry = await storage.updateQueueEntry(id, { status });
 
-    // If it was waiting/called and now it's something else, reorder
-    if ((oldStatus === 'waiting' || oldStatus === 'called') && 
-        status !== 'waiting' && status !== 'called' && removedPosition) {
+    if (isActive(oldStatus) && isTerminal(status) && removedPosition) {
       // @ts-ignore
       await storage.reorderQueue(removedPosition);
     }

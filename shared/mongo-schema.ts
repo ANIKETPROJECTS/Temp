@@ -44,7 +44,7 @@ const QueueEntrySchema: Schema = new Schema({
   queueNumber: { type: Number, required: true, unique: true },
   status: { 
     type: String, 
-    enum: ['waiting', 'called', 'confirmed', 'expired', 'cancelled', 'completed'],
+    enum: ['waiting', 'called', 'confirmed', 'expired', 'cancelled', 'completed', 'left'],
     default: 'waiting',
     required: true 
   },

@@ -156,7 +156,7 @@ export class MongoStorage implements IStorage {
       filter.createdAt = { $gte: startOfDay, $lte: endOfDay };
     }
 
-    const activeStatuses = statuses || ['waiting', 'called'];
+    const activeStatuses = statuses || ['waiting', 'called', 'confirmed'];
     const activeEntries = await MongoQueueEntry.find({ 
       ...filter,
       status: { $in: activeStatuses } 
