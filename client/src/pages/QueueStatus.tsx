@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRoute, useLocation } from "wouter";
 import { useQueueStatus, useCancelBooking } from "@/hooks/use-queue";
 import { CustomerLayout } from "@/components/CustomerLayout";
 import { Button } from "@/components/ui/button";
-import { Loader2, Check, AlertCircle } from "lucide-react";
+import { Loader2, Check, AlertCircle, PartyPopper } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { format } from "date-fns";
 import {
@@ -22,6 +22,8 @@ export default function QueueStatus() {
   const [, setLocation] = useLocation();
   const id = params?.id || "0";
   const [showConfirm, setShowConfirm] = useState(false);
+  const [showPromotion, setShowPromotion] = useState(false);
+  const previousPosition = useRef<number | undefined>(undefined);
   
   const { data: queue, isLoading, error } = useQueueStatus(id);
   const { mutate: leaveQueue, isPending: isLeaving } = useCancelBooking();
@@ -45,6 +47,16 @@ export default function QueueStatus() {
 
   useEffect(() => {
     if (!queue) return;
+    
+    // Check for promotion
+    if (previousPosition.current !== undefined && queue.position !== undefined) {
+      if (queue.position < previousPosition.current) {
+        setShowPromotion(true);
+        setTimeout(() => setShowPromotion(false), 5000);
+      }
+    }
+    previousPosition.current = queue.position;
+
     if (queue.status === "called") {
       setLocation(`/queue/${queue.id}/accept`);
     } else if (queue.status === "completed") {
@@ -80,6 +92,21 @@ export default function QueueStatus() {
   return (
     <CustomerLayout>
       <div className="flex flex-col items-center w-full relative">
+        {/* Promotion Alert */}
+        <AnimatePresence>
+          {showPromotion && (
+            <motion.div
+              initial={{ y: -50, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: -50, opacity: 0 }}
+              className="fixed top-20 left-1/2 -translate-x-1/2 bg-green-500 text-white px-6 py-3 rounded-full shadow-lg z-50 flex items-center gap-2 font-bold whitespace-nowrap"
+            >
+              <PartyPopper className="w-5 h-5" />
+              You moved up! You are now #{queue.position} in line!
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Success Icon */}
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
@@ -103,6 +130,9 @@ export default function QueueStatus() {
           <h1 className="text-7xl font-black text-stone-900 tracking-tighter leading-none">
             # {queue.position || queue.queueNumber}
           </h1>
+          <div className="mt-2 text-stone-500 text-[10px] font-bold uppercase tracking-wider">
+            Welcome to the queue! You are #{queue.position || queue.queueNumber} in line.
+          </div>
         </div>
 
         {/* Side-by-Side Cards */}

@@ -104,12 +104,12 @@ export class MongoStorage implements IStorage {
   async createQueueEntry(entry: InsertQueueEntry): Promise<QueueEntry> {
     const lastEntry = await MongoQueueEntry.findOne({ status: 'waiting' }).sort({ position: -1 });
     const nextPosition = lastEntry && lastEntry.position ? lastEntry.position + 1 : 1;
-    const lastQueueNumberEntry = await MongoQueueEntry.findOne({}, { queueNumber: 1 }).sort({ queueNumber: -1 });
-    const nextQueueNumber = lastQueueNumberEntry && lastQueueNumberEntry.queueNumber ? lastQueueNumberEntry.queueNumber + 1 : 1;
+    const lastQueueNumberEntry = await MongoQueueEntry.findOne({}, { queueNumber: 1 }).sort({ queueNumber: -1 }).exec();
+    const nextQueueNumber = (lastQueueNumberEntry?.queueNumber || 0) + 1;
 
     // Double check for duplicate key if someone else inserted
     let finalQueueNumber = nextQueueNumber;
-    let existing = await MongoQueueEntry.findOne({ queueNumber: finalQueueNumber });
+    let existing = await MongoQueueEntry.findOne({ queueNumber: finalQueueNumber }).exec();
     while (existing) {
       finalQueueNumber++;
       existing = await MongoQueueEntry.findOne({ queueNumber: finalQueueNumber });
@@ -148,6 +148,8 @@ export class MongoStorage implements IStorage {
         }
       });
       mapped.position = position + 1;
+    } else {
+      mapped.position = 0; // Not in queue anymore
     }
     
     return mapped;
@@ -165,12 +167,12 @@ export class MongoStorage implements IStorage {
     }
 
     const activeStatuses = statuses || ['waiting', 'called', 'confirmed'];
-    const activeEntries = await MongoQueueEntry.find({ 
+    const entries = await MongoQueueEntry.find({ 
       ...filter,
       status: { $in: activeStatuses } 
     }).sort({ createdAt: 1 });
     
-    const mapped = activeEntries.map((e, index) => {
+    const mapped = entries.map((e, index) => {
       const entry = this.mapQueueEntry(e);
       entry.position = index + 1;
       return entry;
@@ -184,7 +186,7 @@ export class MongoStorage implements IStorage {
     // Also get non-active entries for history, but sorted by most recent
     const inactive = await MongoQueueEntry.find({ 
       ...filter,
-      status: { $nin: ['waiting', 'called'] } 
+      status: { $nin: ['waiting', 'called', 'confirmed'] } 
     }).sort({ updatedAt: -1 });
     
     return [...mapped, ...inactive.map(e => this.mapQueueEntry(e))];
