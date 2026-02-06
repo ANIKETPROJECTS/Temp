@@ -51,7 +51,7 @@ export type Notification = {
 export const insertQueueSchema = z.object({
   name: z.string().default("Guest"),
   phoneNumber: z.string().regex(/^[0-9]{10}$/, "Please enter a valid 10-digit phone number"),
-  numberOfPeople: z.number().min(1, "Party size must be at least 1").max(10, "Party size cannot exceed 10")
+  numberOfPeople: z.number().min(1, "Party size must be at least 1")
 });
 
 export type InsertUser = {

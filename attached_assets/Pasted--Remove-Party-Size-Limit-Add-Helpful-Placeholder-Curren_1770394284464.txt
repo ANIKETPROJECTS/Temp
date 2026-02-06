@@ -1,0 +1,267 @@
+# Remove Party Size Limit + Add Helpful Placeholder
+
+## Current Behavior
+- Party size buttons: 1, 2, 3, 4, 5, 6
+- Below textbox shows selected number
+- User cannot manually enter party size
+- Textbox is empty when nothing selected
+
+## Required Behavior
+- Party size buttons: 1, 2, 3, 4, 5, 6 (quick select)
+- Below textbox: User can MANUALLY type ANY number
+- **Placeholder text in empty textbox: "Or manually enter party size"**
+- No maximum limit on party size
+- Minimum 1 person required
+
+---
+
+## Changes Required
+
+### Change 1: Make Textbox Editable with Placeholder
+
+**Current (Read-only, no placeholder):**
+```jsx
+<input 
+  type="text" 
+  value={partySize} 
+  readOnly 
+  className="..."
+/>
+```
+
+**Change To (Editable with helpful placeholder):**
+```jsx
+<input 
+  type="number" 
+  value={partySize || ''}
+  onChange={(e) => {
+    const value = Number(e.target.value);
+    if (value >= 0 || e.target.value === '') {
+      setPartySize(value || '');
+    }
+  }}
+  min="1"
+  placeholder="Or manually enter party size"
+  className="w-full text-center py-3 px-4 border rounded-xl bg-white text-stone-900 placeholder:text-stone-400"
+/>
+```
+
+### Change 2: Remove Maximum Limit Validation
+
+Remove any code that restricts party size to 6 or any maximum number:
+```javascript
+// DELETE these if they exist:
+if (partySize > 6) { ... }
+const MAX_PARTY_SIZE = 6;
+// Any other max limit checks
+```
+
+### Change 3: Update Button Click Handlers
+
+Keep quick select buttons working:
+```javascript
+const handlePartySizeClick = (size) => {
+  setPartySize(size);  // Set value when button clicked
+};
+```
+
+### Change 4: Form Validation (Minimum Only)
+
+Only check that party size is at least 1:
+```javascript
+const handleSubmit = (data) => {
+  // Only check minimum
+  if (!partySize || partySize < 1) {
+    toast.error("Please select or enter party size (minimum 1 person)");
+    return;
+  }
+  
+  // No maximum check - allow any number!
+  
+  // Continue with booking...
+  submitBooking({ ...data, partySize });
+};
+```
+
+---
+
+## Visual Example
+
+### When Empty (Before User Action)
+```
+Party Size
+[ 1 ] [ 2 ] [ 3 ] [ 4 ] [ 5 ] [ 6 ]
+
+┌─────────────────────────────────────┐
+│ Or manually enter party size       │  ← Placeholder text in gray
+└─────────────────────────────────────┘
+```
+
+### When Button Clicked (e.g., "2")
+```
+Party Size
+[ 1 ] [*2*] [ 3 ] [ 4 ] [ 5 ] [ 6 ]
+
+┌─────────────────────────────────────┐
+│                 2                   │  ← Shows selected value
+└─────────────────────────────────────┘
+```
+
+### When User Types Manually (e.g., "15")
+```
+Party Size
+[ 1 ] [ 2 ] [ 3 ] [ 4 ] [ 5 ] [ 6 ]
+
+┌─────────────────────────────────────┐
+│                15                   │  ← User typed this
+└─────────────────────────────────────┘
+```
+
+---
+
+## Exact Code Implementation
+
+### Complete Party Size Component:
+
+```jsx
+<div className="space-y-3">
+  <label className="text-stone-700 font-medium flex items-center gap-2">
+    <UserGroupIcon className="w-5 h-5 text-orange-500" />
+    Party Size
+  </label>
+  
+  {/* Quick Select Buttons */}
+  <div className="grid grid-cols-6 gap-2">
+    {[1, 2, 3, 4, 5, 6].map((size) => (
+      <button
+        key={size}
+        type="button"
+        onClick={() => setPartySize(size)}
+        className={`
+          py-3 rounded-xl font-semibold transition
+          ${partySize === size 
+            ? 'bg-orange-500 text-white' 
+            : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
+          }
+        `}
+      >
+        {size}
+      </button>
+    ))}
+  </div>
+  
+  {/* Manual Entry Textbox with Placeholder */}
+  <input
+    type="number"
+    value={partySize || ''}
+    onChange={(e) => {
+      const value = e.target.value;
+      if (value === '' || Number(value) >= 0) {
+        setPartySize(value === '' ? '' : Number(value));
+      }
+    }}
+    min="1"
+    placeholder="Or manually enter party size"
+    className="
+      w-full text-center py-3 px-4 
+      border border-stone-200 rounded-xl 
+      bg-white text-stone-900 
+      placeholder:text-stone-400 placeholder:text-sm
+      focus:outline-none focus:ring-2 focus:ring-orange-500
+    "
+  />
+</div>
+```
+
+---
+
+## User Experience Flow
+
+### Option 1: Quick Select (Common Sizes)
+1. User sees buttons 1-6
+2. User clicks "2"
+3. Textbox shows "2"
+4. Placeholder disappears
+5. User clicks Proceed ✓
+
+### Option 2: Manual Entry (Large Parties)
+1. User sees buttons 1-6
+2. User sees placeholder: "Or manually enter party size"
+3. User clicks in textbox
+4. User types "15"
+5. Placeholder disappears, shows "15"
+6. User clicks Proceed ✓
+
+### Option 3: Change Mind
+1. User clicks "3" button → Shows "3"
+2. User changes mind
+3. User clicks in textbox and types "20"
+4. Shows "20" (overwrites button selection)
+5. User clicks Proceed ✓
+
+---
+
+## Testing Checklist
+
+After implementing:
+- [ ] Empty textbox shows placeholder: "Or manually enter party size" ✓
+- [ ] Click button "2" → Textbox shows 2, placeholder disappears ✓
+- [ ] Click in textbox → Can type manually ✓
+- [ ] Type "10" → Accepted, placeholder disappears ✓
+- [ ] Clear textbox → Placeholder reappears ✓
+- [ ] Type "25" → Accepted ✓
+- [ ] Type "100" → Accepted ✓
+- [ ] Type "0" → Shows error on submit ✓
+- [ ] Empty textbox on submit → Shows error ✓
+- [ ] Large party sizes work in admin panel ✓
+
+---
+
+## Placeholder Text Styling
+
+Make sure placeholder is visible but not too prominent:
+```css
+placeholder:text-stone-400      /* Light gray color */
+placeholder:text-sm             /* Slightly smaller text */
+placeholder:font-normal         /* Not bold */
+```
+
+---
+
+## Keep Everything Else As-Is
+
+✅ **DO NOT CHANGE:**
+- Form layout and design
+- Name field
+- Mobile number field
+- Button styles (1-6)
+- Proceed button
+- Other validation (name, mobile)
+- Admin panel
+- Queue management
+- All other features
+
+⚠️ **ONLY CHANGE:**
+- Remove maximum party size limit
+- Make textbox editable (type="number")
+- Add placeholder: "Or manually enter party size"
+- Allow manual input of ANY number (1+)
+- Keep minimum validation (at least 1)
+- Keep quick select buttons (1-6) working
+
+---
+
+## Summary
+
+**Changes:**
+1. ✅ Textbox editable (user can type)
+2. ✅ Placeholder text: "Or manually enter party size"
+3. ✅ No maximum limit (accept 1, 10, 50, 100, anything)
+4. ✅ Minimum validation (at least 1 person)
+5. ✅ Buttons 1-6 still work for quick selection
+
+**User benefits:**
+- Clear guidance from placeholder text
+- Fast selection (buttons 1-6)
+- Flexible for large parties (type any number)
+- Professional UX with helpful placeholder

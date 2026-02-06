@@ -13,7 +13,7 @@ import { motion } from "framer-motion";
 const formSchema = z.object({
   name: z.string().min(1, "Name is helpful!"),
   phoneNumber: z.string().regex(/^\d{10}$/, "Please enter a valid 10-digit phone number"),
-  numberOfPeople: z.coerce.number().min(1, "At least 1 person").max(10, "Max 10 people"),
+  numberOfPeople: z.coerce.number().min(1, "At least 1 person"),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -113,14 +113,14 @@ export default function Home() {
               <Users className="w-4 h-4 text-orange-500" />
               Party Size
             </label>
-            <div className="flex gap-2 justify-between">
+            <div className="grid grid-cols-6 gap-2">
               {[1, 2, 3, 4, 5, 6].map((num) => (
                 <button
                   key={num}
                   type="button"
                   onClick={() => form.setValue("numberOfPeople", num)}
                   className={`
-                    flex-1 aspect-square rounded-xl font-bold text-lg transition-all duration-200
+                    py-3 rounded-xl font-bold text-lg transition-all duration-200
                     ${form.watch("numberOfPeople") === num 
                       ? "bg-orange-500 text-white shadow-lg shadow-orange-500/30 scale-105" 
                       : "bg-stone-100 text-stone-500 hover:bg-stone-200"}
@@ -130,18 +130,25 @@ export default function Home() {
                 </button>
               ))}
             </div>
-            {/* Custom size input fallback */}
-            <div className="mt-2">
-               <Input 
-                type="number" 
-                min={1} 
-                max={10}
-                {...form.register("numberOfPeople")}
-                className="bg-stone-50 h-10 text-center"
-                placeholder="Custom size"
-              />
-            </div>
-             {form.formState.errors.numberOfPeople && (
+            {/* Manual Entry Textbox with Placeholder */}
+            <Input
+              type="number"
+              {...form.register("numberOfPeople", { valueAsNumber: true })}
+              min="1"
+              placeholder="Or manually enter party size"
+              className="
+                w-full text-center py-3 px-4 h-12
+                border border-stone-200 rounded-xl 
+                bg-stone-50 text-stone-900 text-lg
+                placeholder:text-stone-400 placeholder:text-sm placeholder:font-normal
+                focus:outline-none focus:ring-2 focus:ring-orange-500
+              "
+              onChange={(e) => {
+                const value = e.target.value;
+                form.setValue("numberOfPeople", value === '' ? 0 : Number(value));
+              }}
+            />
+            {form.formState.errors.numberOfPeople && (
               <p className="text-red-500 text-xs font-medium">{form.formState.errors.numberOfPeople.message}</p>
             )}
           </div>
