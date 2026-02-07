@@ -23,10 +23,10 @@ function Router() {
   const isAdminPage = location.startsWith("/admin");
 
   return (
-    <>
+    <div className="relative min-h-screen">
       {!isAdminPage && <BackgroundCarousel />}
       {!isAdminPage && <AnnouncementBanner />}
-      <div className={!isAdminPage ? "pt-[30px] md:pt-[40px] relative z-10" : ""}>
+      <div className={!isAdminPage ? "pt-[30px] md:pt-[40px] relative z-10" : "relative z-10"}>
         <Switch>
           {/* Customer Routes */}
           <Route path="/" component={Home} />
@@ -44,7 +44,7 @@ function Router() {
           <Route component={NotFound} />
         </Switch>
       </div>
-    </>
+    </div>
   );
 }
 

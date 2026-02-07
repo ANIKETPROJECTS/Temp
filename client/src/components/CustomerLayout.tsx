@@ -2,7 +2,7 @@ import { ReactNode } from "react";
 export function CustomerLayout({ children }: { children: ReactNode }) {
   const logoUrl = "/cafe-twenty-twenty-logo.png";
   return (
-    <div className="min-h-screen bg-[#F5E6D3] relative overflow-x-hidden flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen relative overflow-x-hidden flex flex-col items-center justify-center p-4 bg-transparent">
       {/* Background Decorative Elements */}
       <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-b from-orange-100/50 to-transparent pointer-events-none" />
       
