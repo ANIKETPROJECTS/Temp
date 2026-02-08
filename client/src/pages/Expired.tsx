@@ -60,9 +60,9 @@ export default function Expired() {
         {/* Join Queue Again Button */}
         <Button 
           onClick={() => setLocation('/')} 
-          className="w-full h-14 bg-[var(--text-dark)] text-white rounded-2xl font-bold text-lg flex items-center justify-center gap-2 hover:bg-[var(--brown-dark)] transition-all active:scale-[0.98]"
+          className="w-full h-14 bg-[#C46A3A] hover:bg-[#A8572E] text-white rounded-lg font-semibold text-base flex items-center justify-center gap-2 border-2 border-[#C46A3A] hover:border-[#A8572E] transition-all active:scale-[0.98] shadow-sm hover:shadow-md"
         >
-          <span>←</span>
+          <span className="text-white text-xl">←</span>
           <span>Join Queue Again</span>
         </Button>
         
