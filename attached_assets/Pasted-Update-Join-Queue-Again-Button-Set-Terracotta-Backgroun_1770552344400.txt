@@ -1,0 +1,122 @@
+Update "Join Queue Again" Button - Set Terracotta Background Color
+Page: Booking Expired/Error Page
+Required Update:
+"Join Queue Again" Button - Set Terracotta Background:
+
+Element: "Join Queue Again" button with back arrow (← Join Queue Again)
+Current State: Transparent or light background
+Required Change: Set button background to #C46A3A (terracotta)
+Text Color: White (#FFFFFF) for proper contrast
+Keep: All existing functionality unchanged (navigation back to queue form)
+
+CSS Implementation:
+css/* Join Queue Again Button - Terracotta Background */
+.join-queue-again-button {
+  background-color: #C46A3A; /* Terracotta */
+  border: 2px solid #C46A3A;
+  color: #FFFFFF; /* White text */
+  padding: 14px 32px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 400px;
+}
+
+/* Arrow icon color */
+.join-queue-again-button .arrow-icon {
+  color: #FFFFFF;
+}
+
+/* Optional: Hover effect */
+.join-queue-again-button:hover {
+  background-color: #A8572E; /* Terracotta-dark */
+  border-color: #A8572E;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(196, 106, 58, 0.3);
+}
+
+/* Optional: Active/Click state */
+.join-queue-again-button:active {
+  transform: translateY(0);
+  background-color: #A8572E;
+}
+Alternative - If You Want No Hover Effect:
+css/* Join Queue Again Button - Fixed Terracotta, No Hover Change */
+.join-queue-again-button {
+  background-color: #C46A3A;
+  border: 2px solid #C46A3A;
+  color: #FFFFFF;
+  padding: 14px 32px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Keep same color on hover */
+.join-queue-again-button:hover {
+  background-color: #C46A3A;
+  border-color: #C46A3A;
+  color: #FFFFFF;
+}
+Requirements:
+DO Update:
+
+✅ Set button background to #C46A3A (terracotta)
+✅ Set text color to white (#FFFFFF)
+✅ Ensure arrow icon (←) is white
+✅ Add smooth transition if hover effect is included
+✅ Maintain button centering and layout
+
+DO NOT Change:
+
+❌ Button click functionality (redirect to queue form)
+❌ Button text content ("Join Queue Again")
+❌ Arrow icon position
+❌ Page layout or structure
+❌ Error message or expired booking text
+❌ Error icon at top (red circle with exclamation)
+
+Expected Result:
+
+Button displays with solid terracotta background (#C46A3A)
+White text clearly visible on terracotta background
+Back arrow icon appears in white
+Button stands out as primary action on error page
+Clicking button navigates user back to queue registration form
+
+Visual Specifications:
+
+Background Color: #C46A3A (terracotta)
+Hover Color (optional): #A8572E (terracotta-dark)
+Text Color: #FFFFFF (white)
+Border: 2px solid #C46A3A
+Padding: 14px 32px
+Border Radius: 8px
+Font Weight: 600 (semi-bold)
+
+Files to Modify:
+
+Booking expired/error page component CSS only
+Do NOT modify: JavaScript routing or navigation logic
+
+Testing Checklist:
+
+✓ Button displays with terracotta background (#C46A3A)
+✓ Text and arrow icon are white and clearly visible
+✓ Button is centered on the page
+✓ Clicking button redirects to queue form
+✓ Hover effect works (if implemented)
+✓ Button looks good on mobile and desktop
+✓ Good color contrast for accessibility
+
+Context:
+This button appears on the error/expired booking page when a user's booking has expired or been cancelled. It provides a clear call-to-action to rejoin the queue, using the terracotta accent color consistent with other primary action buttons.
+Priority: Medium - Visual consistency with other primary action buttons using terracotta color scheme.
