@@ -1,0 +1,228 @@
+Here's the prompt:
+
+Add Visual Feedback for "Send Message Only" Button Click
+Page: Queue Response/Action Page ("Your Table is Ready!" screen)
+Current Issue:
+
+The "Send Message Only" button works correctly (sends message successfully)
+However, there is NO visual feedback when the button is clicked
+Users cannot tell if the button was clicked or if the message was sent
+This creates confusion about whether the action was completed
+
+Required Update:
+Add Click Feedback and Success Message:
+
+Show visual feedback when button is clicked
+Display "Message Sent!" confirmation after successful send
+Keep all existing functionality intact
+
+Implementation Options:
+Option 1: Show Success Message (Recommended)
+javascript// When "Send Message Only" button is clicked
+const handleSendMessageOnly = async () => {
+  // Existing functionality - DO NOT CHANGE
+  await sendMessage(); // Your existing send function
+  
+  // ADD: Show success feedback
+  showSuccessMessage("Message Sent!");
+  
+  // Optional: Hide message after 3 seconds
+  setTimeout(() => {
+    hideSuccessMessage();
+  }, 3000);
+};
+CSS for Success Message:
+css/* Success message that appears after clicking */
+.message-sent-feedback {
+  background-color: #4CAF50;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  margin-top: 12px;
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Optional: Fade out animation */
+.message-sent-feedback.fade-out {
+  animation: fadeOut 0.3s ease-out;
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+Option 2: Button State Changes
+css/* Add visual feedback to button itself */
+.send-message-button {
+  background-color: transparent;
+  border: 2px solid #7A6658;
+  color: #4A3324;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+/* Loading state while sending */
+.send-message-button.sending {
+  background-color: #E6D3B1;
+  border-color: #E6D3B1;
+  cursor: wait;
+  opacity: 0.7;
+}
+
+/* Success state after sent */
+.send-message-button.sent {
+  background-color: #4CAF50;
+  border-color: #4CAF50;
+  color: white;
+}
+
+/* Button text changes */
+.send-message-button.sent::after {
+  content: " ✓";
+}
+JavaScript Implementation:
+javascriptconst sendMessageButton = document.querySelector('.send-message-button');
+
+const handleSendMessage = async () => {
+  // 1. Show loading state
+  sendMessageButton.classList.add('sending');
+  sendMessageButton.textContent = 'Sending...';
+  sendMessageButton.disabled = true;
+  
+  try {
+    // 2. Send message (existing functionality)
+    await sendMessage(); // Your existing function
+    
+    // 3. Show success state
+    sendMessageButton.classList.remove('sending');
+    sendMessageButton.classList.add('sent');
+    sendMessageButton.textContent = 'Message Sent!';
+    
+    // 4. Reset button after 3 seconds (optional)
+    setTimeout(() => {
+      sendMessageButton.classList.remove('sent');
+      sendMessageButton.textContent = 'Send Message Only';
+      sendMessageButton.disabled = false;
+    }, 3000);
+    
+  } catch (error) {
+    // Handle error
+    sendMessageButton.classList.remove('sending');
+    sendMessageButton.textContent = 'Send Message Only';
+    sendMessageButton.disabled = false;
+    alert('Failed to send message. Please try again.');
+  }
+};
+Recommended Approach: Combined Feedback
+Show both button state change AND success message for best UX:
+javascriptconst handleSendMessageOnly = async () => {
+  const button = document.querySelector('.send-message-button');
+  const successMessage = document.querySelector('.success-message');
+  
+  // 1. Disable button and show loading
+  button.disabled = true;
+  button.textContent = 'Sending...';
+  button.style.opacity = '0.6';
+  
+  try {
+    // 2. Execute existing send functionality
+    await sendMessage(); // DO NOT CHANGE existing function
+    
+    // 3. Show success feedback
+    button.textContent = 'Message Sent! ✓';
+    button.style.backgroundColor = '#4CAF50';
+    button.style.color = 'white';
+    
+    // 4. Show success message below button
+    successMessage.textContent = 'Message Sent Successfully!';
+    successMessage.style.display = 'block';
+    
+    // 5. Reset after 3 seconds
+    setTimeout(() => {
+      button.textContent = 'Send Message Only';
+      button.style.backgroundColor = '';
+      button.style.color = '';
+      button.style.opacity = '1';
+      button.disabled = false;
+      successMessage.style.display = 'none';
+    }, 3000);
+    
+  } catch (error) {
+    // Reset on error
+    button.textContent = 'Send Message Only';
+    button.style.opacity = '1';
+    button.disabled = false;
+    alert('Failed to send message');
+  }
+};
+HTML Structure (Add success message element):
+html<button class="send-message-button" onclick="handleSendMessageOnly()">
+  Send Message Only
+</button>
+
+<!-- Add this success message element -->
+<div class="success-message" style="display: none;">
+  Message Sent Successfully! ✓
+</div>
+Requirements:
+DO Add:
+
+✅ Visual feedback when button is clicked (loading state)
+✅ "Message Sent!" confirmation text after successful send
+✅ Button state changes (disabled during sending, success color after sent)
+✅ Auto-reset button after 3 seconds (optional)
+✅ Clear indication that action was completed
+
+DO NOT Change:
+
+❌ Existing message sending functionality
+❌ API calls or backend logic
+❌ Message content or format
+❌ Other buttons or elements on the page
+❌ Page layout or structure
+
+Expected User Experience:
+
+User clicks "Send Message Only" button
+Button shows "Sending..." (brief loading state)
+After successful send:
+
+Button turns green with text "Message Sent! ✓"
+OR show separate success message "Message Sent Successfully!"
+
+
+After 3 seconds, button resets to original state
+User clearly knows their message was sent
+
+Testing Checklist:
+
+✓ Button shows loading state when clicked
+✓ Success feedback appears after message is sent
+✓ Button resets to original state after 3 seconds
+✓ Message is actually sent (existing functionality works)
+✓ Multiple clicks handled properly (button disabled during send)
+✓ Error handling works if send fails
+✓ Visual feedback is clear and easy to understand
+
+Priority: HIGH - This is a critical UX issue affecting user confidence in the system.

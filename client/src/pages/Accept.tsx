@@ -31,6 +31,7 @@ export default function Accept() {
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [message, setMessage] = useState("");
   const [messageSent, setMessageSent] = useState(false);
+  const [isSendingMessage, setIsSendingMessage] = useState(false);
 
   // Countdown timer logic
   useEffect(() => {
@@ -73,10 +74,23 @@ export default function Accept() {
   };
 
   const handleSendMessage = () => {
-    if (!message.trim()) return;
-    accept({ id: queue!.id, message, onlyMessage: true });
-    setMessageSent(true);
-    setTimeout(() => setMessageSent(false), 3000);
+    if (!message.trim() || isSendingMessage) return;
+    
+    setIsSendingMessage(true);
+    accept({ 
+      id: queue!.id, 
+      message, 
+      onlyMessage: true 
+    }, {
+      onSuccess: () => {
+        setIsSendingMessage(false);
+        setMessageSent(true);
+        setTimeout(() => setMessageSent(false), 3000);
+      },
+      onError: () => {
+        setIsSendingMessage(false);
+      }
+    });
   };
 
   const quickMessages = [
@@ -159,9 +173,19 @@ export default function Accept() {
               variant="outline" 
               size="sm" 
               onClick={handleSendMessage}
-              className="w-full h-8 text-xs font-bold rounded-lg border-[var(--input-border)] text-[var(--text-muted)] hover:text-[var(--olive)] hover:bg-[var(--olive)]/10 bg-[var(--off-white)]/90"
+              disabled={isSendingMessage || messageSent}
+              className={`w-full h-8 text-xs font-bold rounded-lg border-[var(--input-border)] transition-all duration-300 ${
+                messageSent 
+                  ? "bg-[#4CAF50] text-white border-[#4CAF50] hover:bg-[#4CAF50] hover:text-white" 
+                  : "text-[var(--text-muted)] hover:text-[var(--olive)] hover:bg-[var(--olive)]/10 bg-[var(--off-white)]/90"
+              }`}
             >
-              Send Message Only
+              {isSendingMessage ? (
+                <Loader2 className="w-3 h-3 animate-spin mr-2" />
+              ) : messageSent ? (
+                <Check className="w-3 h-3 mr-2" />
+              ) : null}
+              {isSendingMessage ? "Sending..." : messageSent ? "Message Sent!" : "Send Message Only"}
             </Button>
           </div>
 
