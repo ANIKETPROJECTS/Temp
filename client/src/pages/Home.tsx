@@ -122,10 +122,10 @@ export default function Home() {
                       type="button"
                       onClick={() => form.setValue("numberOfPeople", num)}
                       className={`
-                        py-3 rounded-xl font-bold text-lg transition-all duration-300 border-2
+                        py-3 rounded-lg font-semibold text-lg transition-all duration-300 border-2
                         ${form.watch("numberOfPeople") === num 
-                          ? "bg-[#8B5A3C] text-white border-[#8B5A3C] shadow-lg shadow-[#8B5A3C]/30 scale-105" 
-                          : "bg-white text-[#4A3324] border-[#D8C6B0] hover:bg-[#E6D3B1] hover:shadow-md"}
+                          ? "bg-[#C46A3A] text-white border-[#C46A3A] shadow-md scale-105" 
+                          : "bg-white text-[#4A3324] border-[#D8C6B0] hover:bg-[#E6D3B1] hover:shadow-sm"}
                       `}
                     >
                       {num}

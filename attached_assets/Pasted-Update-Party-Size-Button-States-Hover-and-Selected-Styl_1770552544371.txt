@@ -1,0 +1,180 @@
+Update Party Size Button States - Hover and Selected Styles
+Page: Join the Queue Form (Queue Registration Page)
+Element: Party Size selection buttons (numbered 1, 2, 3, 4, 5, 6)
+Required Updates:
+1. Hover State - Add Beige Background:
+
+When user hovers over any party size button (1-6)
+Background color should change to #E6D3B1 (beige)
+Keep button structure and functionality unchanged
+
+2. Selected State - Terracotta Background:
+
+When user clicks/selects a party size button
+Selected button background should change to #C46A3A (terracotta)
+Text color should change to white for better contrast
+Button should remain visually selected until another button is clicked
+
+CSS Implementation:
+css/* Party Size Buttons - Base Style */
+.party-size-button {
+  background-color: #FFFFFF; /* White background */
+  border: 2px solid #D8C6B0; /* or current border color */
+  color: #4A3324; /* Dark text */
+  padding: 16px 24px;
+  border-radius: 8px;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 60px;
+}
+
+/* Hover State - Beige Background */
+.party-size-button:hover {
+  background-color: #E6D3B1; /* Beige */
+  border-color: #D8C6B0;
+  color: #4A3324;
+}
+
+/* Selected/Active State - Terracotta Background */
+.party-size-button.selected,
+.party-size-button.active {
+  background-color: #C46A3A; /* Terracotta */
+  border-color: #C46A3A;
+  color: #FFFFFF; /* White text for contrast */
+}
+
+/* Selected button should not change on hover */
+.party-size-button.selected:hover,
+.party-size-button.active:hover {
+  background-color: #C46A3A; /* Keep terracotta on hover */
+  border-color: #C46A3A;
+  color: #FFFFFF;
+}
+
+/* Optional: Add subtle shadow on hover */
+.party-size-button:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Optional: Pressed/Click effect */
+.party-size-button:active {
+  transform: scale(0.97);
+}
+JavaScript for Selected State (if needed):
+javascript// Add click handler to toggle selected state
+const partySizeButtons = document.querySelectorAll('.party-size-button');
+
+partySizeButtons.forEach(button => {
+  button.addEventListener('click', function() {
+    // Remove 'selected' class from all buttons
+    partySizeButtons.forEach(btn => btn.classList.remove('selected'));
+    
+    // Add 'selected' class to clicked button
+    this.classList.add('selected');
+    
+    // Your existing functionality to set party size value
+    const partySize = this.textContent;
+    document.getElementById('party-size-value').value = partySize;
+  });
+});
+Visual States Summary:
+Default (Unselected):
+
+Background: White (#FFFFFF)
+Text: Dark brown (#4A3324)
+Border: Light beige (#D8C6B0)
+
+Hover (Not Selected):
+
+Background: Beige (#E6D3B1)
+Text: Dark brown (#4A3324)
+Border: Light beige (#D8C6B0)
+
+Selected/Active:
+
+Background: Terracotta (#C46A3A)
+Text: White (#FFFFFF)
+Border: Terracotta (#C46A3A)
+
+Selected + Hover:
+
+Background: Terracotta (#C46A3A) - stays same
+Text: White (#FFFFFF)
+No color change on hover when selected
+
+Current Behavior in Image:
+
+Button "3" appears selected (showing in the field below)
+Button should have terracotta background when selected
+Other buttons (1, 2, 4, 5, 6) should be white/default
+Hovering over unselected buttons should show beige
+
+Requirements:
+DO Update:
+
+✅ Add hover state with beige background (#E6D3B1)
+✅ Add selected state with terracotta background (#C46A3A)
+✅ Change text to white when button is selected
+✅ Add smooth transition between states (0.3s)
+✅ Ensure only one button can be selected at a time
+✅ Selected button should remain highlighted until another is clicked
+
+DO NOT Change:
+
+❌ Button click functionality (setting party size value)
+❌ Button layout or positioning
+❌ Button size or shape
+❌ The number input field below that shows selected value
+❌ Form submission logic
+❌ Any other form elements
+
+Expected User Experience:
+
+User hovers over party size button (e.g., "4")
+
+Button background changes to beige (#E6D3B1)
+
+
+User clicks the button
+
+Button background changes to terracotta (#C46A3A)
+Button text changes to white
+Button stays terracotta (selected state)
+Value appears in the field below
+
+
+User hovers over the selected button
+
+No color change (stays terracotta)
+
+
+User clicks a different button (e.g., "2")
+
+Previous button ("4") returns to white/default
+New button ("2") becomes terracotta/selected
+Value updates in field below
+
+
+
+Testing Checklist:
+
+✓ Hovering unselected buttons shows beige background
+✓ Clicking a button changes it to terracotta with white text
+✓ Only one button appears selected at a time
+✓ Selected button value updates the field below
+✓ Selected button doesn't change color on hover
+✓ Transitions are smooth (not jarring)
+✓ Form submission includes correct party size value
+✓ Mobile touch interactions work correctly
+
+Color Reference:
+
+Hover: #E6D3B1 (beige)
+Selected: #C46A3A (terracotta)
+Selected Text: #FFFFFF (white)
+Default: #FFFFFF (white)
+Default Text: #4A3324 (dark brown)
+
+Priority: Medium - Improves user experience and visual feedback for form interaction.
