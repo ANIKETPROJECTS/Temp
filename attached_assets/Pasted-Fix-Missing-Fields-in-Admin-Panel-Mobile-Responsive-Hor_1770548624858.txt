@@ -1,0 +1,214 @@
+Fix Missing Fields in Admin Panel Mobile Responsive - Horizontal Scroll Table Solution:
+Issues in Mobile Responsive View:
+1. Active Queue Section - Missing Fields:
+
+Desktop shows: #, Customer, Party Size, Wait Time, Message, Date & Time, Status, Actions
+Mobile shows: #, Customer, Party Size, Status, Actions
+Missing in Mobile: Wait Time, Message, Date & Time columns
+
+2. Recent Activity Section - Missing Fields:
+
+Desktop shows: #, Customer, Party Size, Wait Time, Message, Date & Time, Status, Actions
+Mobile shows: #, Customer, Party Size, Status, Actions
+Missing in Mobile: Wait Time, Message, Date & Time columns
+
+3. Export to Excel Button:
+
+The "Export to Excel" button is visible in mobile view and works correctly (downloads complete data with all fields including Wait Time, Message, and Date & Time)
+However, the UI table display on mobile is missing these three important columns
+This creates user confusion - they can export complete data but cannot view it on the mobile screen
+
+Required Fix:
+Update the mobile responsive layout for BOTH "Active Queue" and "Recent Activity" sections to display ALL fields that are present in desktop view using a horizontally scrollable table.
+Fields that MUST be added to mobile view:
+
+Wait Time column
+Message column
+Date & Time column
+
+Fields already showing correctly in mobile:
+
+
+(Queue number)
+
+Customer (name and phone)
+Party Size
+Status
+Actions
+
+Solution: Horizontal Scroll Table for Mobile
+Implement a horizontally scrollable table on mobile devices that:
+
+Shows all 8 columns (same as desktop)
+Allows users to swipe left/right to see hidden columns
+Maintains table structure and alignment
+Provides smooth scrolling experience
+Shows scroll indicators or hints to users
+
+Implementation Approach:
+css/* Mobile responsive styles for queue tables */
+@media (max-width: 768px) {
+  .queue-table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+    width: 100%;
+  }
+  
+  .queue-table {
+    width: 100%;
+    min-width: 900px; /* Ensures all columns fit, forces horizontal scroll */
+    display: table;
+  }
+  
+  /* Optional: Add scroll hint/shadow */
+  .queue-table-container::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 20px;
+    background: linear-gradient(to right, transparent, rgba(0,0,0,0.1));
+    pointer-events: none;
+  }
+  
+  /* Ensure columns don't shrink too much */
+  .queue-table th,
+  .queue-table td {
+    white-space: nowrap;
+    min-width: 80px; /* Adjust as needed per column */
+  }
+  
+  /* Specific column widths for readability */
+  .queue-table .column-number { min-width: 50px; }
+  .queue-table .column-customer { min-width: 150px; }
+  .queue-table .column-party-size { min-width: 80px; }
+  .queue-table .column-wait-time { min-width: 100px; }
+  .queue-table .column-message { min-width: 120px; }
+  .queue-table .column-date-time { min-width: 140px; }
+  .queue-table .column-status { min-width: 100px; }
+  .queue-table .column-actions { min-width: 120px; }
+}
+```
+
+**Visual Behavior on Mobile:**
+```
+[Visible on screen] → [Scroll right to see more] →
+┌────┬──────────┬────────┬──────┐
+│ #  │ Customer │ Party  │Status│ → [Swipe left]
+├────┼──────────┼────────┼──────┤
+│ #1 │ Alex     │   4    │WAIT..│
+└────┴──────────┴────────┴──────┘
+
+                    ↓ User swipes left ↓
+
+← [Swipe right] ┌──────┬────────┬──────────┬────────┐
+                │ Wait │Message │Date&Time │Actions │
+                ├──────┼────────┼──────────┼────────┤
+                │WAIT..│ None   │08Feb10:22│ View   │
+                └──────┴────────┴──────────┴────────┘
+User Experience Enhancements:
+
+Scroll Indicator:
+
+Add a subtle shadow/gradient on the right edge indicating more content
+Show a small icon or text hint like "← Swipe to see more →"
+
+
+Sticky First Column (Optional):
+
+Consider making the # column or Customer column sticky while scrolling
+Helps maintain context while viewing other columns
+
+
+Column Headers:
+
+Ensure headers scroll with the content
+Headers should be sticky at the top when scrolling vertically
+
+
+Touch-Friendly:
+
+Ensure adequate padding in table cells for touch interaction
+Maintain proper button sizes for Actions column
+
+
+
+Critical Requirements:
+DO Implement:
+
+✅ Horizontal scrolling on mobile (max-width: 768px and below)
+✅ Display all 8 columns on mobile (through scrolling)
+✅ Smooth touch scrolling behavior
+✅ Proper column widths for readability
+✅ Scroll indicators or hints
+✅ Maintain table structure and alignment
+
+DO NOT Change:
+
+❌ Desktop view styles (working perfectly)
+❌ Any functionality (export, view, status updates, search, filters)
+❌ Data structure or API calls
+❌ Button click handlers
+❌ Vertical scrolling behavior
+❌ Table header structure
+❌ Data refresh functionality
+
+Files to Update:
+
+Active Queue component CSS (mobile media queries)
+Recent Activity component CSS (mobile media queries)
+Table component responsive styles
+Media queries: @media (max-width: 768px), @media (max-width: 480px), @media (max-width: 375px)
+
+Testing Checklist:
+
+✓ All 8 columns visible on mobile through horizontal scrolling
+✓ Smooth swipe/scroll experience on touch devices
+✓ Data displayed matches exported Excel file
+✓ Test on physical devices: iPhone (375px), Android phones (360px, 414px)
+✓ Test on tablet sizes: iPad (768px)
+✓ Test on small screens: 320px width
+✓ Export to Excel functionality still works
+✓ All buttons in Actions column remain clickable
+✓ Search functionality works
+✓ Filter buttons work (Today, Yesterday, Export to Excel)
+✓ Vertical scrolling for multiple rows works
+✓ Table headers remain visible while scrolling
+✓ Verify both Active Queue and Recent Activity sections
+
+Responsive Breakpoint Strategy:
+css/* Tablet and larger - Desktop layout */
+@media (min-width: 769px) {
+  /* Keep existing desktop styles - no changes */
+}
+
+/* Mobile devices - Horizontal scroll */
+@media (max-width: 768px) {
+  /* Implement horizontal scroll table */
+}
+
+/* Small mobile devices - Optimize further */
+@media (max-width: 480px) {
+  /* Adjust font sizes, padding if needed */
+  /* Keep horizontal scroll approach */
+}
+
+/* Extra small devices */
+@media (max-width: 375px) {
+  /* Further optimize for smallest screens */
+  /* Maintain horizontal scroll */
+}
+Expected Mobile User Flow:
+
+User opens Active Queue or Recent Activity on mobile
+Sees first few columns: #, Customer, Party Size
+Notices scroll indicator suggesting more content
+Swipes left to reveal: Wait Time, Message, Date & Time
+Continues swiping to see: Status, Actions
+Can scroll back right to see earlier columns
+Can tap on actions (View, Call, etc.) easily
+Can export to Excel and see that exported data matches visible columns
+
+Priority: HIGH - Critical data (Wait Time, Message, Date & Time) is hidden from mobile users while being available in exports, creating poor UX and potential operational issues for restaurant staff managing queues on mobile devices.
+Solution Type: Horizontal Scrollable Table (NO card layout)
