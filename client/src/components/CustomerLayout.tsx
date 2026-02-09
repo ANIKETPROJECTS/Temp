@@ -54,14 +54,14 @@ export function CustomerLayout({ children }: { children: ReactNode }) {
             <img 
               src={logoUrl} 
               alt="Cafe Twenty Twenty" 
-              className="w-64 h-64 object-contain animate-subtle-glow"
+              className="w-48 h-48 object-contain animate-subtle-glow"
             />
           </motion.div>
 
           <div className="mt-0 px-3 py-0 rounded-xl bg-transparent text-center flex flex-col items-center">
             {/* Cafe Name with animations */}
             <motion.h1 
-              className="text-5xl md:text-6xl font-bold text-white leading-tight drop-shadow-sm whitespace-nowrap flex overflow-hidden animate-gradient-shift hover-shine transition-transform hover:-translate-y-1"
+              className="text-5xl md:text-6xl font-bold text-white leading-tight drop-shadow-sm whitespace-nowrap flex animate-gradient-shift hover-shine transition-transform hover:-translate-y-1 px-4"
               style={{ fontFamily: "'Playfair Display', serif" }}
               initial="hidden"
               animate="visible"
