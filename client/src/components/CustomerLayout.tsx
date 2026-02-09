@@ -55,7 +55,7 @@ export function CustomerLayout({ children }: { children: ReactNode }) {
             />
           </motion.div>
 
-          <div className="px-3 py-0 rounded-xl bg-transparent text-center flex flex-col items-center relative z-20">
+          <div className="-mt-2 sm:-mt-3 md:-mt-4 px-3 py-0 rounded-xl bg-transparent text-center flex flex-col items-center relative z-20">
             {/* Cafe Name with animations */}
             <motion.h1 
               className="text-4xl sm:text-5xl md:text-6xl font-bold text-white leading-tight drop-shadow-sm flex animate-gradient-shift hover-shine transition-transform hover:-translate-y-1 px-4 text-center justify-center whitespace-nowrap"
