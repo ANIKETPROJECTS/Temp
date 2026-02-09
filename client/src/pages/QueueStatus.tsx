@@ -158,7 +158,7 @@ export default function QueueStatus() {
                   e.preventDefault();
                   window.open('/menu.pdf', '_blank');
                 }}
-                className="bg-[#E6D3B1] text-[#C46A3A] border-[#E6D3B1] font-black px-8 h-10 rounded-xl shadow-sm hover:bg-[#E6D3B1] hover:border-[#E6D3B1] hover:text-[#C46A3A] transition-none uppercase tracking-wide text-xs active:opacity-90 w-full max-w-[200px]"
+                className="bg-[#E6D3B1] text-[#C46A3A] border-white border-2 font-black px-8 h-10 rounded-xl shadow-sm hover:bg-[#E6D3B1] hover:border-white hover:text-[#C46A3A] transition-none uppercase tracking-wide text-xs active:opacity-90 w-full max-w-[200px]"
               >
                 Explore Our Menu
               </Button>
