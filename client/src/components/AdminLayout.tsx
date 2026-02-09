@@ -41,7 +41,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
     "--sidebar-accent-foreground": "0 0% 100%",
     "--sidebar-border": "0 0% 100% / 0.2",
     "--sidebar-ring": "22 39% 39%",
-    "--sidebar-width": "14rem", // ~224px
+    "--sidebar-width": "16rem", // Increased from 14rem to accommodate "Recent Activity"
     "--sidebar-width-icon": "3rem",
   };
 
