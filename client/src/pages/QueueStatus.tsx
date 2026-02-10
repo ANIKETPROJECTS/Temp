@@ -105,7 +105,7 @@ export default function QueueStatus() {
           {/* Headings */}
           <div className="text-center mb-4">
             <h2 className="text-3xl font-black text-[var(--text-dark)] tracking-tight leading-none mb-2">Queued!</h2>
-            <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase leading-tight opacity-70">
+            <p className="text-sm font-bold text-[var(--text-muted)] uppercase leading-tight opacity-70">
               Cafe Timings: 12:30 PM to 11:00 PM (Everyday)
             </p>
           </div>
@@ -116,10 +116,10 @@ export default function QueueStatus() {
             <h1 className="text-7xl font-black text-[var(--text-dark)] tracking-tighter leading-none">
               # {queue.position ?? queue.activeQueuePosition}
             </h1>
-            <div className="mt-2 text-[var(--text-muted)] text-[10px] font-bold uppercase tracking-wider">
+            <div className="mt-2 text-[var(--text-muted)] text-xl font-bold uppercase tracking-wider">
               YOU ARE #{queue.position ?? queue.activeQueuePosition} IN LINE
             </div>
-            <p className="mt-2 text-[var(--text-muted)] text-[10px] font-bold uppercase">
+            <p className="mt-2 text-[var(--text-muted)] text-xl font-bold uppercase">
               Booking Reference: #{queue.dailySerialNumber}
             </p>
           </div>
