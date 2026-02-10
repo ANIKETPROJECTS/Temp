@@ -17,7 +17,11 @@ import { Download } from "lucide-react";
 export default function AdminActivity() {
   const [, setLocation] = useLocation();
   const { data: user, isLoading: isUserLoading } = useUser();
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const now = new Date();
+    const istStr = now.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+    return new Date(istStr);
+  });
   const formattedDate = format(selectedDate, "yyyy-MM-dd");
   const [searchTerm, setSearchTerm] = useState("");
   const [lastUpdated, setLastUpdated] = useState(new Date());
@@ -97,7 +101,11 @@ export default function AdminActivity() {
           <Button 
             variant="outline" 
             size="sm"
-            onClick={() => setSelectedDate(new Date())}
+            onClick={() => {
+              const now = new Date();
+              const istStr = now.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+              setSelectedDate(new Date(istStr));
+            }}
             className="flex-1 md:flex-none bg-white border-[#E0E0E0] text-[#2C1810] hover:bg-[#F0E6D2]"
           >
             Today
@@ -106,9 +114,11 @@ export default function AdminActivity() {
             variant="outline" 
             size="sm"
             onClick={() => {
-              const yesterday = new Date();
-              yesterday.setDate(yesterday.getDate() - 1);
-              setSelectedDate(yesterday);
+              const now = new Date();
+              const istStr = now.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+              const today = new Date(istStr);
+              today.setDate(today.getDate() - 1);
+              setSelectedDate(today);
             }}
             className="flex-1 md:flex-none bg-white border-[#E0E0E0] text-[#2C1810] hover:bg-[#F0E6D2]"
           >

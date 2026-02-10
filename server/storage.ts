@@ -109,9 +109,22 @@ export class MongoStorage implements IStorage {
   }
 
   async createQueueEntry(entry: InsertQueueEntry): Promise<QueueEntry> {
+    const getLocalDate = () => {
+      return new Date().toLocaleDateString('en-CA', { 
+        timeZone: 'Asia/Kolkata',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      });
+    };
+
     const now = new Date();
-    const bookingDate = new Date(now);
+    const localDateStr = getLocalDate();
+    const bookingDate = new Date(localDateStr);
     bookingDate.setHours(0, 0, 0, 0);
+
+    console.log("Creation - Current server time:", now.toISOString());
+    console.log("Creation - Local date (IST):", localDateStr);
 
     const totalTodayBookings = await MongoQueueEntry.countDocuments({
       bookingDate,
@@ -170,6 +183,15 @@ export class MongoStorage implements IStorage {
     dateStr?: string,
     statuses?: string[],
   ): Promise<QueueEntry[]> {
+    const getLocalDate = () => {
+      return new Date().toLocaleDateString('en-CA', { 
+        timeZone: 'Asia/Kolkata',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      });
+    };
+
     const filter: any = {};
 
     if (dateStr) {
@@ -177,9 +199,12 @@ export class MongoStorage implements IStorage {
       bookingDate.setHours(0, 0, 0, 0);
       filter.bookingDate = bookingDate;
     } else {
-      const today = new Date();
+      const localDateStr = getLocalDate();
+      const today = new Date(localDateStr);
       today.setHours(0, 0, 0, 0);
       filter.bookingDate = today;
+      console.log("List - Current server time:", new Date().toISOString());
+      console.log("List - Local date (IST):", localDateStr);
     }
 
     // ✅ फक्त waiting आणि called active मानले
