@@ -35,13 +35,6 @@ export default function Home() {
   const onSubmit = (data: FormData) => {
     joinQueue(data, {
       onSuccess: (entry) => {
-        // Use entry.position for real-time queue position
-        // The popup and main card must show the same position.
-        const position = entry.position || entry.queueNumber;
-        console.log("=== POPUP DEBUG ===");
-        console.log("Queue position being displayed in popup:", position);
-        console.log("Entry data:", entry);
-        console.log("==================");
         toast({
           title: "Welcome to the queue!",
           description: `You are #${entry.dailyQueueNumber} in line.`,

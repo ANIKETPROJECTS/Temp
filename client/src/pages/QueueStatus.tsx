@@ -47,10 +47,6 @@ export default function QueueStatus() {
 
   useEffect(() => {
     if (!queue) return;
-    console.log("=== MAIN CARD DEBUG ===");
-    console.log("Queue position being displayed in main card:", queue.position || queue.queueNumber || 1);
-    console.log("Queue data:", queue);
-    console.log("==================");
     
     // Check for promotion
     if (previousPosition.current !== undefined && queue.position !== undefined) {

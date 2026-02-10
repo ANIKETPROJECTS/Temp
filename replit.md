@@ -37,6 +37,9 @@ Preferred communication style: Simple, everyday language.
 ### Key Data Models
 - **Users**: Admin accounts with username/password authentication
 - **Queue Entries**: Customer bookings with status tracking (waiting → called → confirmed/expired/cancelled)
+  - `dailyQueueNumber`: Sequential number per date, resets daily
+  - `bookingDate`: Date-only field for daily grouping
+  - `bookingDateTime`: Full timestamp of the booking
 - **Notifications**: SMS/call logs with Twilio integration tracking
 
 ### Real-time Features
