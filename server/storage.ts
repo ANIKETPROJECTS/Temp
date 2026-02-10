@@ -5,7 +5,7 @@ import {
   MongoNotification,
   type IUser,
   type IQueueEntry,
-  type INotification
+  type INotification,
 } from "@shared/mongo-schema";
 import {
   type QueueEntry,
@@ -26,10 +26,13 @@ export interface IStorage {
   getQueueEntry(id: string): Promise<QueueEntry | undefined>;
   getQueueEntries(date?: string): Promise<QueueEntry[]>;
   updateQueueStatus(id: string, status: string): Promise<QueueEntry>;
-  updateQueueEntry(id: string, updates: Partial<QueueEntry>): Promise<QueueEntry>;
+  updateQueueEntry(
+    id: string,
+    updates: Partial<QueueEntry>,
+  ): Promise<QueueEntry>;
   recalculateActiveQueuePositions(bookingDate: Date): Promise<number>;
   reorderQueue(removedPosition: number): Promise<void>;
-  
+
   // Expiry check
   getExpiredEntries(threshold: Date): Promise<QueueEntry[]>;
 
@@ -110,12 +113,15 @@ export class MongoStorage implements IStorage {
     const bookingDate = new Date(now);
     bookingDate.setHours(0, 0, 0, 0);
 
-    const totalTodayBookings = await MongoQueueEntry.countDocuments({ bookingDate });
+    const totalTodayBookings = await MongoQueueEntry.countDocuments({
+      bookingDate,
+    });
     const dailySerialNumber = totalTodayBookings + 1;
 
+    // ✅ फक्त waiting आणि called count करा
     const activeTodayBookings = await MongoQueueEntry.countDocuments({
       bookingDate: bookingDate,
-      status: { $in: ["waiting", "called", "confirmed"] }
+      status: { $in: ["waiting", "called"] },
     });
     const activeQueuePosition = activeTodayBookings + 1;
 
@@ -126,45 +132,46 @@ export class MongoStorage implements IStorage {
       activeQueuePosition,
       bookingDate,
       bookingDateTime: now,
-      status: 'waiting',
+      status: "waiting",
       position: activeQueuePosition,
-      updatedAt: now
+      updatedAt: now,
     });
 
     return this.mapQueueEntry(newEntryDoc);
   }
 
   async getQueueEntry(id: string): Promise<QueueEntry | undefined> {
-    const entry = mongoose.Types.ObjectId.isValid(id) 
+    const entry = mongoose.Types.ObjectId.isValid(id)
       ? await MongoQueueEntry.findById(id)
       : await MongoQueueEntry.findOne({ dailySerialNumber: parseInt(id) || 0 });
-    
+
     if (!entry) return undefined;
-    
+
     const mapped = this.mapQueueEntry(entry);
-    
-    // Calculate real-time position if it's waiting, called or confirmed
-    if (['waiting', 'called', 'confirmed'].includes(mapped.status)) {
+
+    // ✅ फक्त waiting आणि called साठी position calculate करा
+    if (["waiting", "called"].includes(mapped.status)) {
       const position = await MongoQueueEntry.countDocuments({
-        status: { $in: ['waiting', 'called', 'confirmed'] },
+        status: { $in: ["waiting", "called"] },
         bookingDate: entry.bookingDate,
-        $or: [
-          { dailySerialNumber: { $lt: entry.dailySerialNumber } }
-        ]
+        $or: [{ dailySerialNumber: { $lt: entry.dailySerialNumber } }],
       });
       mapped.activeQueuePosition = position + 1;
       mapped.position = position + 1;
     } else {
       mapped.activeQueuePosition = 0;
-      mapped.position = 0; // Not in queue anymore
+      mapped.position = null;
     }
-    
+
     return mapped;
   }
 
-  async getQueueEntries(dateStr?: string, statuses?: string[]): Promise<QueueEntry[]> {
+  async getQueueEntries(
+    dateStr?: string,
+    statuses?: string[],
+  ): Promise<QueueEntry[]> {
     const filter: any = {};
-    
+
     if (dateStr) {
       const bookingDate = new Date(dateStr);
       bookingDate.setHours(0, 0, 0, 0);
@@ -175,20 +182,23 @@ export class MongoStorage implements IStorage {
       filter.bookingDate = today;
     }
 
-    const activeStatuses = statuses || ['waiting', 'called', 'confirmed'];
-    const entries = await MongoQueueEntry.find({ 
+    // ✅ फक्त waiting आणि called active मानले
+    const activeStatuses = statuses || ["waiting", "called"];
+    const entries = await MongoQueueEntry.find({
       ...filter,
-      status: { $in: activeStatuses } 
-    }).sort({ dailySerialNumber: 1 }).exec();
-    
+      status: { $in: activeStatuses },
+    })
+      .sort({ dailySerialNumber: 1 })
+      .exec();
+
     const mapped = entries.map((e: any, index: number) => {
       const entry = this.mapQueueEntry(e);
-      if (['waiting', 'called', 'confirmed'].includes(entry.status)) {
+      if (["waiting", "called"].includes(entry.status)) {
         entry.activeQueuePosition = index + 1;
         entry.position = index + 1;
       } else {
         entry.activeQueuePosition = 0;
-        entry.position = 0;
+        entry.position = null;
       }
       return entry;
     });
@@ -197,57 +207,84 @@ export class MongoStorage implements IStorage {
       return mapped;
     }
 
-    const inactiveEntries = await MongoQueueEntry.find({ 
+    // ✅ confirmed पण inactive list मध्ये येईल
+    const inactiveEntries = await MongoQueueEntry.find({
       ...filter,
-      status: { $nin: ['waiting', 'called', 'confirmed'] } 
-    }).sort({ updatedAt: -1 }).exec();
-    
-    return [...mapped, ...inactiveEntries.map((e: any) => this.mapQueueEntry(e))];
+      status: { $nin: ["waiting", "called"] },
+    })
+      .sort({ updatedAt: -1 })
+      .exec();
+
+    return [
+      ...mapped,
+      ...inactiveEntries.map((e: any) => this.mapQueueEntry(e)),
+    ];
   }
 
   async updateQueueStatus(id: string, status: string): Promise<QueueEntry> {
     const updated = await MongoQueueEntry.findByIdAndUpdate(
       id,
       { status, updatedAt: new Date() },
-      { new: true }
+      { new: true },
     );
     if (!updated) throw new Error("Entry not found");
     return this.mapQueueEntry(updated);
   }
 
-  async updateQueueEntry(id: string, updates: Partial<QueueEntry>): Promise<QueueEntry> {
+  async updateQueueEntry(
+    id: string,
+    updates: Partial<QueueEntry>,
+  ): Promise<QueueEntry> {
     const updated = await MongoQueueEntry.findByIdAndUpdate(
       id,
       { ...updates, updatedAt: new Date() },
-      { new: true }
+      { new: true },
     );
     if (!updated) throw new Error("Entry not found");
-    
-    // If status changed to a terminal state, recalculate positions
-    const isTerminal = (s: string) => ['completed', 'cancelled', 'expired', 'left'].includes(s);
+
+    // ✅ फक्त terminal state साठी recalculate करा
+    const isTerminal = (s: string) =>
+      ["completed", "cancelled", "expired", "left"].includes(s);
     if (updates.status && isTerminal(updates.status)) {
       await this.recalculateActiveQueuePositions(updated.bookingDate);
     }
-    
+
     return this.mapQueueEntry(updated);
   }
 
   async recalculateActiveQueuePositions(bookingDate: Date): Promise<number> {
+    // ✅ फक्त waiting आणि called साठी positions update करा
     const activeBookings = await MongoQueueEntry.find({
       bookingDate,
-      status: { $in: ["waiting", "called", "confirmed"] }
+      status: { $in: ["waiting", "called"] },
     }).sort({ dailySerialNumber: 1 });
 
     for (let i = 0; i < activeBookings.length; i++) {
       await MongoQueueEntry.updateOne(
         { _id: activeBookings[i]._id },
-        { 
+        {
           activeQueuePosition: i + 1,
           position: i + 1,
-          updatedAt: new Date()
-        }
+          updatedAt: new Date(),
+        },
       );
     }
+
+    // ✅ confirmed/completed चे position null करा
+    await MongoQueueEntry.updateMany(
+      {
+        bookingDate,
+        status: {
+          $in: ["confirmed", "completed", "cancelled", "expired", "left"],
+        },
+      },
+      {
+        activeQueuePosition: 0,
+        position: null,
+        updatedAt: new Date(),
+      },
+    );
+
     return activeBookings.length;
   }
 
@@ -259,10 +296,10 @@ export class MongoStorage implements IStorage {
 
   async getExpiredEntries(threshold: Date): Promise<QueueEntry[]> {
     const entries = await MongoQueueEntry.find({
-      status: 'called',
-      responseDeadline: { $lt: threshold }
+      status: "called",
+      responseDeadline: { $lt: threshold },
     });
-    return entries.map(e => this.mapQueueEntry(e));
+    return entries.map((e) => this.mapQueueEntry(e));
   }
 
   async logNotification(notification: any): Promise<Notification> {
