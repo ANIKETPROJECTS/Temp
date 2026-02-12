@@ -144,11 +144,12 @@ export class MongoStorage implements IStorage {
     });
     const activeQueuePosition = activeTodayBookings + 1;
 
-    // Handle Customer Card Logic
+    // === STEP 1 & 2: Find or create customer card FIRST ===
     let customerCard = await MongoCustomerCard.findOne({ phoneNumber: entry.phoneNumber });
     let visitNumber = 1;
 
     if (!customerCard) {
+      // Step 3a: Create NEW card with all 9-10 fields
       customerCard = await MongoCustomerCard.create({
         phoneNumber: entry.phoneNumber,
         name: entry.name || "Guest",
@@ -160,10 +161,13 @@ export class MongoStorage implements IStorage {
         createdAt: now,
         updatedAt: now,
       });
+      visitNumber = 1;
     } else {
-      visitNumber = customerCard.totalVisits + 1;
+      // Step 3b: Calculate visitNumber
+      visitNumber = (customerCard.totalVisits || 0) + 1;
     }
 
+    // Step 4: Create queue entry with customerCardId and visitNumber
     const newEntryDoc = await MongoQueueEntry.create({
       ...entry,
       name: entry.name || undefined,
@@ -179,7 +183,7 @@ export class MongoStorage implements IStorage {
       updatedAt: now,
     });
 
-    // Update customer card
+    // Step 5: Update customer card AFTER queue entry created
     await MongoCustomerCard.updateOne(
       { _id: customerCard._id },
       {
