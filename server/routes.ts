@@ -356,6 +356,18 @@ export async function registerRoutes(
     res.json(updated);
   });
 
+  // MIGRATION ROUTE
+  app.post("/api/admin/migrate-customers", async (req, res) => {
+    try {
+      const { migrateCustomerCards } = await import("./scripts/migrateCustomerCards");
+      const result = await migrateCustomerCards();
+      res.json({ success: true, result });
+    } catch (err: any) {
+      console.error("Migration Error:", err);
+      res.status(500).json({ success: false, message: err.message });
+    }
+  });
+
   // === CUSTOMER ROUTES ===
   app.get("/api/customers/:phoneNumber", async (req, res) => {
     try {

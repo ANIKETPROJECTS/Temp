@@ -1,0 +1,104 @@
+Task: Create a migration script to generate customer cards for ALL existing queue entries that don't have customer cards yet.
+Problem:
+
+Old queue entries exist in queueentries collection
+These customers don't have entries in customercards collection
+Need to create customer cards based on historical queue data
+
+Solution: Create migration script
+
+SCRIPT REQUIREMENTS:
+File to create: server/scripts/migrateCustomerCards.js or scripts/createMissingCustomerCards.js
+Script logic:
+Step 1: Group all queue entries by phoneNumber
+
+Get all documents from queueentries collection
+Group by phoneNumber field
+For each unique phone number, collect all their queue entries
+
+Step 2: For each unique customer (phone number):
+
+Check if customer card already exists in customercards collection
+If card EXISTS → skip this customer
+If card DOES NOT exist → create new card
+
+Step 3: When creating new customer card, calculate:
+
+totalVisits = count of queue entries for this phone number
+visits = array of all queue entry _ids for this customer
+firstVisitDate = earliest createdAt or bookingDate from their entries
+lastVisitDate = most recent createdAt or bookingDate from their entries
+name = take from first entry (or most recent)
+customerCardId = if queue entries already have customerCardId, use that same ID; otherwise generate new ObjectId
+
+Step 4: Insert customer card with fields:
+
+_id (use existing customerCardId from queue entries if present, else new ObjectId)
+phoneNumber
+name
+email: null
+totalVisits (calculated count)
+visits (array of queue entry IDs)
+firstVisitDate (oldest date)
+lastVisitDate (newest date)
+createdAt (use firstVisitDate)
+updatedAt (current date)
+
+Step 5: Update queue entries for this customer:
+
+If they don't have customerCardId → add it
+If they don't have visitNumber → calculate and add it (1, 2, 3... based on date order)
+
+
+EXECUTION INSTRUCTIONS:
+How to run:
+
+Create endpoint: POST /api/admin/migrate-customers
+Or create standalone script file
+Script should be runnable once to fix all historical data
+Should be safe to run multiple times (check if card exists before creating)
+
+Logging requirements:
+
+Print total unique customers found
+Print how many cards need to be created
+Print progress for each customer created
+Print summary at end (cards created, entries updated)
+
+
+SAFETY CHECKS:
+Before creating card:
+
+Check if customercards already has entry for this phoneNumber
+Skip if exists (don't create duplicate)
+
+Before updating queue entries:
+
+Check if customerCardId already exists in entry
+Only update if field is missing or null
+
+Data validation:
+
+Handle null/undefined dates gracefully
+Ensure totalVisits matches actual count
+Ensure visits array length equals totalVisits
+
+
+EXAMPLE OUTPUT WHEN SCRIPT RUNS:
+Starting customer card migration...
+Found 156 total queue entries
+Found 45 unique customers
+Checking existing customer cards...
+Found 7 existing cards, need to create 38 new cards
+
+Creating cards...
+✅ Created card for Shubham (9876543210) - 5 visits
+✅ Created card for Neesha (9819423806) - 5 visits
+✅ Created card for Priya (9123456789) - 3 visits
+...
+
+Migration complete!
+- Total customers: 45
+- Cards created: 38
+- Cards already existed: 7
+- Queue entries updated: 156
