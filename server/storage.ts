@@ -146,11 +146,19 @@ export class MongoStorage implements IStorage {
 
     // Handle Customer Card Logic
     let customerCard = await MongoCustomerCard.findOne({ phoneNumber: entry.phoneNumber });
+    let visitNumber = 1;
+
     if (!customerCard) {
       customerCard = await MongoCustomerCard.create({
         phoneNumber: entry.phoneNumber,
         name: entry.name || "Guest",
+        totalVisits: 0,
+        firstVisitDate: now,
+        lastVisitDate: now,
+        visits: [],
       });
+    } else {
+      visitNumber = customerCard.totalVisits + 1;
     }
 
     const newEntryDoc = await MongoQueueEntry.create({
@@ -163,8 +171,23 @@ export class MongoStorage implements IStorage {
       status: "waiting",
       position: activeQueuePosition,
       customerCardId: customerCard._id,
+      visitNumber,
       updatedAt: now,
     });
+
+    // Update customer card
+    await MongoCustomerCard.updateOne(
+      { _id: customerCard._id },
+      {
+        $inc: { totalVisits: 1 },
+        $push: { visits: newEntryDoc._id },
+        $set: {
+          name: entry.name || customerCard.name,
+          lastVisitDate: now,
+          updatedAt: now
+        }
+      }
+    );
 
     return this.mapQueueEntry(newEntryDoc);
   }

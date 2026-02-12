@@ -21,6 +21,11 @@ export const MongoUser = mongoose.model<IUser>("User", UserSchema);
 export interface ICustomerCard extends Document {
   phoneNumber: string;
   name: string;
+  email?: string | null;
+  totalVisits: number;
+  firstVisitDate: Date;
+  lastVisitDate: Date;
+  visits: mongoose.Types.ObjectId[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -28,6 +33,11 @@ export interface ICustomerCard extends Document {
 const CustomerCardSchema: Schema = new Schema({
   phoneNumber: { type: String, required: true, unique: true },
   name: { type: String, required: true },
+  email: { type: String, default: null },
+  totalVisits: { type: Number, default: 0 },
+  firstVisitDate: { type: Date, default: Date.now },
+  lastVisitDate: { type: Date, default: Date.now },
+  visits: [{ type: Schema.Types.ObjectId, ref: 'QueueEntry' }],
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 }, { timestamps: true });
@@ -54,6 +64,7 @@ export interface IQueueEntry extends Document {
   message?: string;
   position?: number;
   customerCardId?: mongoose.Types.ObjectId;
+  visitNumber?: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -89,6 +100,7 @@ const QueueEntrySchema: Schema = new Schema({
   message: { type: String },
   position: { type: Number },
   customerCardId: { type: Schema.Types.ObjectId, ref: 'CustomerCard' },
+  visitNumber: { type: Number },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 }, { timestamps: true });

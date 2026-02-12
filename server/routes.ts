@@ -336,7 +336,7 @@ export async function registerRoutes(
   });
 
   // CANCEL BOOKING (ADMIN SIDE)
-  app.post("/api/admin/bookings/cancel", async (req, res) => {
+  app.post(api.admin.bookings.cancel.path, async (req, res) => {
     const { bookingId } = req.body;
     const entry = await storage.getQueueEntry(bookingId);
     if (!entry) return res.status(404).json({ message: "Not found" });
@@ -354,6 +354,41 @@ export async function registerRoutes(
     }
 
     res.json(updated);
+  });
+
+  // === CUSTOMER ROUTES ===
+  app.get("/api/customers/:phoneNumber", async (req, res) => {
+    try {
+      const { phoneNumber } = req.params;
+      const { MongoCustomerCard, MongoQueueEntry } = await import("../shared/mongo-schema.js");
+
+      const customer = await MongoCustomerCard.findOne({ phoneNumber });
+      if (!customer) {
+        return res.status(404).json({ success: false, message: "Customer not found" });
+      }
+
+      const visits = await MongoQueueEntry.find({ customerCardId: customer._id })
+        .sort({ bookingDateTime: -1 });
+
+      res.json({
+        success: true,
+        customer,
+        visits,
+        totalVisits: visits.length
+      });
+    } catch (err: any) {
+      res.status(500).json({ success: false, message: err.message });
+    }
+  });
+
+  app.get("/api/customers", async (req, res) => {
+    try {
+      const { MongoCustomerCard } = await import("../shared/mongo-schema.js");
+      const customers = await MongoCustomerCard.find({}).sort({ totalVisits: -1 });
+      res.json({ success: true, customers, count: customers.length });
+    } catch (err: any) {
+      res.status(500).json({ success: false, message: err.message });
+    }
   });
 
   // === SEED DATA ===
